@@ -1,0 +1,60 @@
+---
+- name: Configure sysctl
+  sysctl:
+    name: "{{ item }}"
+    value: "{{ sysctl_settings[item] }}"
+    sysctl_file: /etc/sysctl.conf
+    reload: yes
+  with_items: "{{ sysctl_settings.keys() | list }}"
+  notify: reload sysctl
+
+- name: Install iptables-persistent
+  debconf:
+    name: iptables-persistent
+    question: "{{ item }}"
+    value: "true"
+    vtype: boolean
+  loop:
+    - iptables-persistent/autosave_v4
+    - iptables-persistent/autosave_v6
+
+- name: Ensure iptables-persistent package
+  apt:
+    name: iptables-persistent
+    state: present
+
+- name: Configure NAT rules
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    jump: MASQUERADE
+    source: "{{ item.value }}"
+    out_interface: eth0
+  with_dict: "{{ vpn_subnets }}"
+
+- name: Allow established connections
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    ctstate: ESTABLISHED,RELATED
+
+- name: Configure firewall rules
+  iptables:
+    chain: "{{ item.chain }}"
+    jump: "{{ item.jump }}"
+    protocol: "{{ item.protocol | default(omit) }}"
+    destination_port: "{{ item.dport | default(omit) }}"
+    in_interface: "{{ item.in_interface | default(omit) }}"
+    icmp_type: "{{ item.icmp_type | default(omit) }}"
+  with_items: "{{ fw_rules }}"
+  notify: save iptables
+
+- name: Set default policies
+  iptables:
+    chain: "{{ item.chain }}"
+    policy: "{{ item.policy }}"
+  loop:
+    - {chain: "FORWARD", policy: "ACCEPT"}
+    - {chain: "OUTPUT", policy: "ACCEPT"}
+    - {chain: "INPUT", policy: "DROP"}
+  notify: save iptables

@@ -1,0 +1,5 @@
+---
+vpn_subnets:
+  ocserv: "10.66.66.0/24"
+  wireguard: "10.66.67.0/24"
+

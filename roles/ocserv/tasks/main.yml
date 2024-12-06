@@ -1,0 +1,84 @@
+---
+- name: Install required packages
+  apt:
+    name:
+      - sudo
+      - build-essential
+      - libgnutls28-dev
+      - libev-dev
+      - pkg-config
+      - libreadline-dev
+      - libprotobuf-c-dev
+      - protobuf-c-compiler
+      - libhttp-parser-dev
+      - gperf
+    state: present
+    update_cache: yes
+
+- name: Check if ocserv is installed
+  command: which ocserv
+  register: ocserv_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Create build directory
+  file:
+    path: "{{ ocserv_build_dir }}"
+    state: directory
+  when: ocserv_check.rc != 0
+
+- name: Download ocserv source
+  get_url:
+    url: "{{ ocserv_url }}"
+    dest: "{{ ocserv_build_dir }}/ocserv-{{ ocserv_version }}.tar.xz"
+  when: ocserv_check.rc != 0
+
+- name: Extract ocserv source
+  unarchive:
+    src: "{{ ocserv_build_dir }}/ocserv-{{ ocserv_version }}.tar.xz"
+    dest: "{{ ocserv_build_dir }}"
+    remote_src: yes
+  when: ocserv_check.rc != 0
+
+- name: Compile and install ocserv
+  shell: |
+    cd {{ ocserv_build_dir }}/ocserv-{{ ocserv_version }}
+    ./configure
+    make
+    make install
+  when: ocserv_check.rc != 0
+
+- name: Create ocserv user
+  user:
+    name: ocserv
+    groups: sudo
+    create_home: yes
+    system: yes
+
+- name: Create ocserv config directory
+  file:
+    path: /etc/ocserv
+    state: directory
+
+- name: Template ocserv config
+  template:
+    src: ocserv.conf.j2
+    dest: /etc/ocserv/ocserv.conf
+  notify: restart ocserv
+
+- name: Template systemd service
+  template:
+    src: ocserv.service.j2
+    dest: /etc/systemd/system/ocserv.service
+  notify: restart ocserv
+
+- name: Manage ocserv users
+  include_tasks: manage_users.yml
+
+- name: Enable and start ocserv service
+  systemd:
+    name: ocserv
+    enabled: yes
+    state: started
+    daemon_reload: yes
+

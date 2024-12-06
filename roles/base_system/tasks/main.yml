@@ -1,0 +1,54 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+    force_apt_get: yes
+  environment:
+    UCF_FORCE_CONFFOLD: 1
+
+- name: Install basic packages
+  apt:
+    name:
+      - sudo
+      - neovim
+      - neofetch
+      - git
+      - curl
+      - wget
+      - tmux
+      - htop
+      - foot-terminfo
+      - kitty-terminfo
+      - build-essential
+      - certbot
+      - rsync
+      - aria2
+    state: present
+
+- name: Add Speedtest repository
+  shell: |
+    curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash
+  args:
+    creates: /etc/apt/sources.list.d/ookla_speedtest-cli.list
+
+- name: Install Speedtest
+  apt:
+    name: speedtest
+    state: present
+    update_cache: yes
+
+- name: Setup Neovim config directory
+  file:
+    path: /root/.config/nvim
+    state: directory
+    mode: '0755'
+
+- name: Configure Neovim
+  copy:
+    content: "set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab"
+    dest: /root/.config/nvim/init.vim
+    mode: '0644'

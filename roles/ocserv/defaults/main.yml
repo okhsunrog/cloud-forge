@@ -1,0 +1,5 @@
+---
+ocserv_version: "1.3.0"
+ocserv_url: "https://www.infradead.org/ocserv/download/ocserv-{{ ocserv_version }}.tar.xz"
+ocserv_build_dir: "/tmp/ocserv-build"
+

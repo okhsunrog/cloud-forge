@@ -1,0 +1,7 @@
+---
+- name: reload sysctl
+  command: sysctl -p
+
+- name: save iptables
+  command: netfilter-persistent save
+

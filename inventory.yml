@@ -1,0 +1,10 @@
+---
+all:
+  children:
+    vps:
+      hosts:
+        vps1:
+          ansible_host: "{{ vault_vps_ip }}"
+          ansible_user: root
+          ansible_ssh_pass: "{{ vault_root_password }}"
+
