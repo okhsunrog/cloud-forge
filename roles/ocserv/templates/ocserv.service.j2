@@ -1,13 +1,13 @@
 [Unit]
-Description=OpenConnect SSL VPN server
+Description=OpenConnect SSL VPN server ({{ instance.instance_id }})
 Documentation=man:ocserv(8)
 After=network-online.target
 
 [Service]
 PrivateTmp=true
-PIDFile={{ ocserv_pid_file }}
+PIDFile={{ instance_paths.pid_file }}
 Type=simple
-ExecStart=/usr/local/sbin/ocserv --foreground --pid-file {{ ocserv_pid_file }} --config {{ ocserv_config_file }}
+ExecStart=/usr/local/sbin/ocserv --foreground --pid-file {{ instance_paths.pid_file }} --config {{ instance_paths.config_file }}
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

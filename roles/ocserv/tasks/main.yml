@@ -9,32 +9,9 @@
   include_tasks: install.yml
   when: ocserv_check.rc != 0
 
-- name: Create ocserv config directory
-  file:
-    path: /etc/ocserv
-    state: directory
-
-- name: Template ocserv config
-  template:
-    src: ocserv.conf.j2
-    dest: /etc/ocserv/ocserv.conf
-  notify: restart ocserv
-
-- name: Overwrite ocserv users file
-  file:
-    path: /etc/ocserv/ocpasswd
-    state: absent
-
-- name: Add ocserv users
-  vars:
-    ocpasswd_file: /etc/ocserv/ocpasswd
-  loop: "{{ ocserv_users }}"
-  command: echo "{{ item.password }}" | ocpasswd -c {{ ocpasswd_file }} {{ item.username }}
-  no_log: true
-  notify: restart ocserv
-
-- name: Ensure ocserv service is enabled and started
-  systemd:
-    name: ocserv
-    enabled: yes
-    state: started
+- name: Setup ocserv instances
+  include_tasks: setup_instance.yml
+  loop: "{{ ocserv_instances }}"
+  loop_control:
+    loop_var: instance
+    label: "{{ instance.instance_id }}"

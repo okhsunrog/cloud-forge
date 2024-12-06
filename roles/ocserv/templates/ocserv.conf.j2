@@ -1,28 +1,31 @@
 # Authentication method
-auth = "plain[passwd= {{ ocserv_passwd_file }} ]"
+auth = "plain[passwd= {{ instance_paths.passwd_file }} ]"
 
-# Listening settings
-listen-host = {{ ocserv_tcp_listen_host }}
-udp-listen-host = {{ ocserv_udp_listen_host }}
+# TCP listening host and port
+listen-host = {{ instance.tcp_listen_host | default(ocserv_default_settings.tcp_listen_host) }}
+tcp-port = {{ instance.tcp_port | default(ocserv_default_settings.tcp_port) }}
 
-# TCP and UDP port numbers
-tcp-port = {{ ocserv_tcp_port }}
-udp-port = {{ ocserv_udp_port }}
+{% if instance.udp_enabled | default(ocserv_default_settings.udp_enabled) %}
+# UDP settings
+udp-port = {{ instance.udp_port | default(ocserv_default_settings.udp_port) }}
+udp-listen-host = {{ instance.udp_listen_host | default(ocserv_default_settings.udp_listen_host) }}
+{% endif %}
+
 
 # User and group to run as
 run-as-user = ocserv
 run-as-group = ocserv
 
 # Socket file
-socket-file = {{ ocserv_socket_file }}
+socket-file = {{ instance_paths.socket_file }}
 
 # Server certificate and key
-server-cert = {{ ocserv_server_cert }}
-server-key = {{ ocserv_server_key }}
+server-cert = "/etc/letsencrypt/live/{{ instance.domain }}/fullchain.pem"
+server-key = "/etc/letsencrypt/live/{{ instance.domain }}/privkey.pem"
 
 # Client limits
-max-clients = {{ ocserv_max_clients }}
-max-same-clients = {{ ocserv_max_same_clients }}
+max-clients = {{ instance.max_clients | default(ocserv_default_settings.max_clients) }}
+max-same-clients = {{ instance.max_same_clients | default(ocserv_default_settings.max_same_clients) }}
 
 # Network settings
 listen-proxy-proto = true
@@ -55,11 +58,11 @@ use-occtl = true
 log-level = 2
 
 # MTU setting
-mtu = {{ ocserv_mtu }}
+mtu = {{ instance.mtu | default(ocserv_default_settings.mtu) }}
 try-mtu-discovery = true
 
 # Device name
-device = {{ ocserv_device }}
+device = {{ instance.device | default(ocserv_default_settings.device) }}
 
 # Whether the generated IPs will be predictable, i.e., IP stays the
 # same for the same user when possible.
@@ -70,11 +73,11 @@ predictable-ips = true
 default-domain = "{{ ocserv_domain }}"
 
 # IPv4 network
-ipv4-network = {{ ocserv_ipv4_network }}
+ipv4-network = {{ instance.ipv4_network }}
 tunnel-all-dns = true
 
 # DNS servers
-{%- for dns_server in ocserv_dns_servers %}
+{%- for dns_server in instance.dns_servers | default(ocserv_default_settings.dns_servers) %}
 dns = {{ dns_server }}
 {%- endfor %}
 
@@ -82,8 +85,8 @@ dns = {{ dns_server }}
 route = default
 
 # Config per user and group
-config-per-user = {{ ocserv_config_per_user }}
-config-per-group = {{ ocserv_config_per_group }}
+config-per-user = {{ instance_paths.config_per_user }}
+config-per-group = {{ instance_paths.config_per_group }}
 
 # Client compatibility
 cisco-client-compat = true
@@ -93,8 +96,9 @@ client-bypass-protocol = false
 
 # Camouflage settings
 camouflage = true
-camouflage_secret = "{{ ocserv_camouflage_secret }}"
-camouflage_realm = "{{ ocserv_camouflage_realm }}"
+camouflage_secret = "{{ instance.camouflage_secret | default(ocserv_default_settings.camouflage_secret) }}"
+camouflage_realm = "{{ instance.camouflage_realm | default(ocserv_default_settings.camouflage_realm) }}"
+
 
 # Traffic shaping settings
 # Unset to enable bandwidth restrictions (in bytes/sec). The
@@ -102,7 +106,7 @@ camouflage_realm = "{{ ocserv_camouflage_realm }}"
 # The RX direction refers to received data on the server from the
 # VPN client, and the TX refers to transmitted data by the server
 # to the client.
-{%- if ocserv_bandwidth | int > 0 %}
-rx-data-per-sec = {{ ocserv_bandwidth }}
-tx-data-per-sec = {{ ocserv_bandwidth }}
+{%- if instance.bandwidth | default(ocserv_default_settings.bandwidth) | int > 0 %}
+rx-data-per-sec = {{ instance.bandwidth | default(ocserv_default_settings.bandwidth) }}
+tx-data-per-sec = {{ instance.bandwidth | default(ocserv_default_settings.bandwidth) }}
 {%- endif %}

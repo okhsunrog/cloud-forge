@@ -1,0 +1,46 @@
+---
+- name: Set instance paths
+  set_fact:
+    instance_paths:
+      passwd_file: "{{ ocserv_base_paths.passwd_file | replace('{id}', instance.instance_id) }}"
+      socket_file: "{{ ocserv_base_paths.socket_file | replace('{id}', instance.instance_id) }}"
+      config_file: "{{ ocserv_base_paths.config_file | replace('{id}', instance.instance_id) }}"
+      pid_file: "{{ ocserv_base_paths.pid_file | replace('{id}', instance.instance_id) }}"
+      config_per_user: "{{ ocserv_base_paths.config_per_user | replace('{id}', instance.instance_id) }}"
+      config_per_group: "{{ ocserv_base_paths.config_per_group | replace('{id}', instance.instance_id) }}"
+
+- name: Validate required instance parameters
+  assert:
+    that:
+      - instance.domain is defined
+      - instance.ipv4_network is defined
+    fail_msg: "Each instance must have 'domain' and 'ipv4_network' defined. Missing for instance: {{ instance.instance_id }}"
+    success_msg: "Instance {{ instance.instance_id }} has all required parameters"
+
+- name: Create instance directories
+  file:
+    path: "{{ item | dirname }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ instance_paths.config_file }}"
+    - "{{ instance_paths.config_per_user }}"
+    - "{{ instance_paths.config_per_group }}"
+
+- name: Template ocserv config
+  template:
+    src: ocserv.conf.j2
+    dest: "{{ instance_paths.config_file }}"
+  notify: restart ocserv {{ instance.instance_id }}
+
+- name: Template systemd service
+  template:
+    src: ocserv.service.j2
+    dest: "/etc/systemd/system/ocserv-{{ instance.instance_id }}.service"
+  notify: restart ocserv {{ instance.instance_id }}
+
+- name: Add ocserv users
+  command: echo "{{ item.password }}" | ocpasswd -c {{ instance_paths.passwd_file }} {{ item.username }}
+  loop: "{{ ocserv_users[instance.instance_id] }}"
+  no_log: true
+  notify: restart ocserv {{ instance.instance_id }}

@@ -19,4 +19,5 @@
 
   roles:
     - base_system
+    - ocserv
     - network
