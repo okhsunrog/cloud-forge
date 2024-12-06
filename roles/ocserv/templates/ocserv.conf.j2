@@ -1,0 +1,108 @@
+# Authentication method
+auth = "plain[passwd= {{ ocserv_passwd_file }} ]"
+
+# Listening settings
+listen-host = {{ ocserv_tcp_listen_host }}
+udp-listen-host = {{ ocserv_udp_listen_host }}
+
+# TCP and UDP port numbers
+tcp-port = {{ ocserv_tcp_port }}
+udp-port = {{ ocserv_udp_port }}
+
+# User and group to run as
+run-as-user = ocserv
+run-as-group = ocserv
+
+# Socket file
+socket-file = {{ ocserv_socket_file }}
+
+# Server certificate and key
+server-cert = {{ ocserv_server_cert }}
+server-key = {{ ocserv_server_key }}
+
+# Client limits
+max-clients = {{ ocserv_max_clients }}
+max-same-clients = {{ ocserv_max_same_clients }}
+
+# Network settings
+listen-proxy-proto = true
+rate-limit-ms = 100
+keepalive = 30
+dpd = 60
+mobile-dpd = 300
+switch-to-tcp-timeout = 25
+session-timeout = 86400
+
+# Authentication timeouts
+auth-timeout = 300
+cookie-timeout = 86400
+
+# TLS priorities
+tls-priorities = "NORMAL:%SERVER_PRECEDENCE:-VERS-SSL3.0:-VERS-TLS1.0:-VERS-TLS1.1:+VERS-TLS1.3:-VERS-DTLS-ALL:+VERS-DTLS1.2"
+
+# Re-authentication and banning
+min-reauth-time = 1
+max-ban-score = 180
+ban-reset-time = 1200
+
+# Session settings
+deny-roaming = false
+rekey-time = 172800
+rekey-method = ssl
+
+# Logging and control
+use-occtl = true
+log-level = 2
+
+# MTU setting
+mtu = {{ ocserv_mtu }}
+try-mtu-discovery = true
+
+# Device name
+device = {{ ocserv_device }}
+
+# Whether the generated IPs will be predictable, i.e., IP stays the
+# same for the same user when possible.
+predictable-ips = true
+
+# The default domain to be advertised. Multiple domains (functional on
+# openconnect clients) can be provided in a space separated list.
+default-domain = "{{ ocserv_domain }}"
+
+# IPv4 network
+ipv4-network = {{ ocserv_ipv4_network }}
+tunnel-all-dns = true
+
+# DNS servers
+{%- for dns_server in ocserv_dns_servers %}
+dns = {{ dns_server }}
+{%- endfor %}
+
+# Routes
+route = default
+
+# Config per user and group
+config-per-user = {{ ocserv_config_per_user }}
+config-per-group = {{ ocserv_config_per_group }}
+
+# Client compatibility
+cisco-client-compat = true
+dtls-legacy = false
+cisco-svc-client-compat = false
+client-bypass-protocol = false
+
+# Camouflage settings
+camouflage = true
+camouflage_secret = "{{ ocserv_camouflage_secret }}"
+camouflage_realm = "{{ ocserv_camouflage_realm }}"
+
+# Traffic shaping settings
+# Unset to enable bandwidth restrictions (in bytes/sec). The
+# setting here is global, but can also be set per user or per group.
+# The RX direction refers to received data on the server from the
+# VPN client, and the TX refers to transmitted data by the server
+# to the client.
+{%- if ocserv_bandwidth | int > 0 %}
+rx-data-per-sec = {{ ocserv_bandwidth }}
+tx-data-per-sec = {{ ocserv_bandwidth }}
+{%- endif %}

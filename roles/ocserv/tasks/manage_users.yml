@@ -1,7 +1,0 @@
----
-- name: Add ocserv users
-  command: "ocpasswd -c /etc/ocserv/ocpasswd {{ item.username }}"
-  input: "{{ item.password }}\n{{ item.password }}"
-  with_items: "{{ ocserv_users }}"
-  no_log: true
-

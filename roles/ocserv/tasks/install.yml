@@ -1,0 +1,58 @@
+---
+- name: Install required packages
+  apt:
+    name:
+      - ipcalc-ng
+      - libgnutls28-dev
+      - libev-dev
+      - xz-utils
+      - pkg-config
+      - libreadline-dev
+      - libprotobuf-c-dev
+      - protobuf-c-compiler
+      - libhttp-parser-dev
+      - gperf
+  state: present
+  update_cache: yes
+
+- name: Create build directory
+  file:
+    path: "{{ ocserv_build_dir }}"
+    state: directory
+
+- name: Download ocserv source
+  get_url:
+    url: "{{ ocserv_url }}"
+    dest: "{{ ocserv_build_dir }}/ocserv-{{ ocserv_version }}.tar.xz"
+
+- name: Extract ocserv source
+  unarchive:
+    src: "{{ ocserv_build_dir }}/ocserv-{{ ocserv_version }}.tar.xz"
+    dest: "{{ ocserv_build_dir }}"
+    remote_src: yes
+
+- name: Compile and install ocserv
+  shell: |
+    ./configure
+    make
+    make install
+  args:
+    chdir: "{{ ocserv_build_dir }}/ocserv-{{ ocserv_version }}"
+
+- name: Remove build directory after installation
+  file:
+    path: "{{ ocserv_build_dir }}"
+    state: absent
+
+- name: Create ocserv user
+  user:
+    name: ocserv
+    groups: sudo
+    create_home: yes
+    system: yes
+
+- name: Template systemd service
+  template:
+    src: ocserv.service.j2
+    dest: /etc/systemd/system/ocserv.service
+  notify: restart ocserv

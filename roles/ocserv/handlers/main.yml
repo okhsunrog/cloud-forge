@@ -3,4 +3,5 @@
   systemd:
     name: ocserv
     state: restarted
+    daemon_reload: yes
 

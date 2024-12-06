@@ -1,5 +1,32 @@
 ---
 ocserv_version: "1.3.0"
 ocserv_url: "https://www.infradead.org/ocserv/download/ocserv-{{ ocserv_version }}.tar.xz"
-ocserv_build_dir: "/tmp/ocserv-build"
+ocserv_build_dir: "~/ocserv-build"
+ocserv_users: [] # populate this with a list of users and passwords from vault
 
+# in future construst them using ocserv instance id
+ocserv_passwd_file: /etc/ocserv/ocpasswd
+ocserv_socket_file: /var/run/ocserv-socket
+ocserv_config_file: /etc/ocserv/ocserv.conf
+ocserv_pid_file: /var/run/ocserv.pid
+ocserv_config_per_user: "/etc/ocserv/ocserv_config_per_user"
+ocserv_config_per_group: "/etc/ocserv/ocserv_config_per_group"
+ocserv_udp_listen_host: "{{ ansible_default_ipv4.address }}"
+ocserv_tcp_listen_host: 127.0.0.1
+ocserv_tcp_port: 447
+ocserv_udp_port: 443
+ocserv_domain: "open.example.com"  # Replace with your domain
+ocserv_server_cert: "/etc/letsencrypt/live/{{ ocserv_domain }}/fullchain.pem"
+ocserv_server_key: "/etc/letsencrypt/live/{{ ocserv_domain }}/privkey.pem"
+ocserv_max_clients: 24
+ocserv_max_same_clients: 5
+ocserv_device: "vpns"
+ocserv_ipv4_network: "10.66.66.0/24"
+ocserv_dns_servers:
+  - "94.140.14.14"
+  - "94.140.15.15"
+ocserv_camouflage_secret: "your_camouflage_secret"
+ocserv_camouflage_realm: "Your Camouflage Realm"
+# set to zero for no limit
+ocserv_bandwidth: 0
+ocserv_mtu: 1472
