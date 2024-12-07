@@ -4,6 +4,8 @@ vpn_subnets: # CIDR notation, these subnets will be added to iptables rules (mas
   ocserv_friends: "10.68.68.0/24"
   wireguard: "10.66.67.0/24"
 
+wireguard_port: 51820
+
 domains:
   ocserv_personal: "open.okhsunrog.dev"
   ocserv_friends: "kafe.okhsunrog.dev"

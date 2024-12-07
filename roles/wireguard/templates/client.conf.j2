@@ -1,0 +1,10 @@
+[Interface]
+PrivateKey = {{ item.private_key }}
+Address = {{ item.ip }}/32
+DNS = 94.140.14.14, 94.140.15.15
+
+[Peer]
+PublicKey = {{ lookup('file', wireguard_public_key_path) }}
+Endpoint = {{ ansible_default_ipv4.address }}:{{ wireguard_port }}
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25

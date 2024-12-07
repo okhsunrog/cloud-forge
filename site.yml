@@ -20,4 +20,5 @@
   roles:
     - base_system
     - ocserv
+    - wireguard
     - network

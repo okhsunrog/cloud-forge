@@ -1,0 +1,54 @@
+---
+- name: Install wireguard
+  apt:
+    name: wireguard
+    state: present
+    update_cache: yes
+
+- name: Check if private key exists
+  stat:
+    path: "{{ wireguard_private_key_path }}"
+  register: private_key_file
+
+- name: Generate private key if not exists
+  shell: wg genkey > {{ wireguard_private_key_path }}
+  args:
+    creates: "{{ wireguard_private_key_path }}"
+  when: not private_key_file.stat.exists
+
+- name: Read private key
+  slurp:
+    src: "{{ wireguard_private_key_path }}"
+  register: wireguard_private_key
+
+- name: Generate public key
+  shell: echo "{{ wireguard_private_key.content | b64decode }}" | wg pubkey > {{ wireguard_public_key_path }}
+  args:
+    creates: "{{ wireguard_public_key_path }}"
+
+- name: Create client configs directory
+  file:
+    path: "{{ wireguard_clients_dir }}"
+    state: directory
+    mode: '0700'
+
+- name: Generate server config
+  template:
+    src: wg0.conf.j2
+    dest: "{{ wireguard_config_path }}/{{ wireguard_interface }}.conf"
+    mode: '0600'
+  notify: restart wireguard
+
+- name: Generate client configs
+  template:
+    src: client.conf.j2
+    dest: "{{ wireguard_clients_dir }}/{{ item.name }}.conf"
+    mode: '0600'
+  loop: "{{ wireguard_peers }}"
+  notify: restart wireguard
+
+- name: Enable and start wireguard
+  systemd:
+    name: "wg-quick@{{ wireguard_interface }}"
+    enabled: yes
+    state: started
