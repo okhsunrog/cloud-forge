@@ -1,0 +1,25 @@
+---
+all_domains: >-
+  {%- set domains_list = [] -%}
+  {%- macro extract_domains(item) -%}
+    {%- if item is string -%}
+      {{ domains_list.append(item) }}
+    {%- elif item is mapping -%}
+      {%- for val in item.values() -%}
+        {{ extract_domains(val) }}
+      {%- endfor -%}
+    {%- elif item is iterable -%}
+      {%- for val in item -%}
+        {{ extract_domains(val) }}
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endmacro -%}
+  {{ extract_domains(domains) }}
+  {{ domains_list }}
+
+
+# Generate service names for ocserv instances
+ocserv_service_names: "{{ ocserv_instances | map(attribute='instance_id') | map('regex_replace', '^', 'ocserv-') | join(' ') }}"
+
+certbot_pre_hook: "systemctl stop nginx {{ ocserv_service_names }}"
+certbot_post_hook: "systemctl start nginx {{ ocserv_service_names }}"

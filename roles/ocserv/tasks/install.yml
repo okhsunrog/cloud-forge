@@ -50,9 +50,3 @@
     groups: sudo
     create_home: yes
     system: yes
-
-- name: Template systemd service
-  template:
-    src: ocserv.service.j2
-    dest: /etc/systemd/system/ocserv.service
-  notify: restart ocserv

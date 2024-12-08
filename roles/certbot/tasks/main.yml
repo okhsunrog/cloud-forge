@@ -1,0 +1,25 @@
+---
+- name: Install Certbot and dependencies
+  apt:
+    name:
+      - certbot
+      - python3-certbot
+    state: present
+    update_cache: yes
+
+- name: Obtain SSL certificates for all domains
+  certbot_certificate:
+    domains: "{{ all_domains }}"
+    authenticator: standalone
+    installer: none
+    agree_tos: yes
+    email: {{ email }}
+    state: present
+  register: certbot_result
+
+- name: Set up auto-renewal cron job
+  cron:
+    name: "Certbot Auto Renewal"
+    job: "/usr/bin/certbot renew --quiet --pre-hook '{{ certbot_pre_hook }}' --post-hook '{{ certbot_post_hook }}'"
+    hour: 3
+    minute: 30

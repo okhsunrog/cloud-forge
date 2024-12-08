@@ -4,7 +4,41 @@ vpn_subnets: # CIDR notation, these subnets will be added to iptables rules (mas
   ocserv_friends: "10.68.68.0/24"
   wireguard: "10.66.67.0/24"
 
-wireguard_port: 51820
+# Network ports configuration, used by all playbooks
+ports:
+  external: # used by iptables
+    ssh: 
+      port: 22
+      type: tcp
+    https:
+      port: 443
+      type: tcp
+    wireguard:
+      port: 51820
+      type: udp
+    http:
+      port: 80
+      type: tcp
+    ocserv_personal:
+      port: 443
+      type: udp
+
+  internal: # localhost, tcp ports
+    ocserv_personal: 447
+    ocserv_friends: 448
+    nginx_https: 8443
+
+reverse_proxy: # used by nginx
+  network: {{ vpn_subnets.ocserv_personal }}
+  ports:
+    jellyfin: 8096
+    nextcloud: 8080
+    photoprism: 2342
+    snake: 8081
+    forgejo: 2222
+
+
+email: "me@okhsunrog.dev" # for certbot
 
 domains:
   ocserv_personal: "open.okhsunrog.dev"
@@ -33,6 +67,8 @@ ocserv_instances:
   - instance_id: "personal"
     domain: "{{ domains['ocserv_' + instance_id] }}"
     ipv4_network: "{{ vpn_subnets['ocserv_' + instance_id] }}"
+    tcp_port: "{{ ports.internal['ocserv_' + instance_id] }}"
+    udp_port: "{{ ports.external['ocserv_' + instance_id].port }}"
     device: "vpn0"
     camouflage_secret: "p3rs0n4l_4cc3ss_0nly"
     camouflage_realm: "Nginx Admin Portal"
@@ -40,8 +76,8 @@ ocserv_instances:
   - instance_id: "friends"
     domain: "{{ domains['ocserv_' + instance_id] }}"
     ipv4_network: "{{ vpn_subnets['ocserv_' + instance_id] }}"
+    tcp_port: "{{ ports.internal['ocserv_' + instance_id] }}"
     device: "vpn1"
-    tcp_port: 448
     udp_enabled: false
     max_same_clients: 3
     bandwidth: 65536000  # ~65MB/s
