@@ -1,0 +1,65 @@
+---
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Copy nginx.conf
+  copy:
+    src: nginx.conf
+    dest: "{{ nginx_conf_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload Nginx
+
+- name: Remove default site configuration
+  file:
+    path: "/etc/nginx/sites-enabled/default"
+    state: absent
+  notify: Reload Nginx
+
+- name: Ensure sites-available directory exists
+  file:
+    path: "/etc/nginx/sites-available"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure sites-enabled directory exists
+  file:
+    path: "/etc/nginx/sites-enabled"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy Nginx site configurations
+  template:
+    src: "{{ item }}.conf.j2"
+    dest: "/etc/nginx/sites-available/{{ item }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ domains.nginx.keys() | list }}"
+  loop_control:
+    label: "{{ item }}"
+  notify: Reload Nginx
+
+- name: Enable Nginx site configurations
+  file:
+    src: "/etc/nginx/sites-available/{{ item }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ item }}.conf"
+    state: link
+  loop: "{{ domains.nginx.keys() | list }}"
+  loop_control:
+    label: "{{ item }}"
+  notify: Reload Nginx
+
+- name: Ensure Nginx is started and enabled
+  service:
+    name: nginx
+    state: started
+    enabled: yes

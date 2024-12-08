@@ -50,7 +50,7 @@ domains:
     jellyfin:
       - "jellyfin.okhsunrog.ru"
       - "jellyfin.okhsunrog.dev"
-    nextcloud:
+    cloud:
       - "cloud.okhsunrog.ru"
       - "cloud.okhsunrog.dev"
     photoprism:
