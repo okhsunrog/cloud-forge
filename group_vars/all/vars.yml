@@ -2,7 +2,7 @@
 vpn_subnets: # CIDR notation, these subnets will be added to iptables rules (masquerade)
   ocserv_personal: "10.67.76.0/24"
   ocserv_friends: "10.68.68.0/24"
-  wireguard: "10.66.67.0/24"
+  wireguard: "10.66.66.0/24"
 
 # Network ports configuration, used by all playbooks
 ports:
@@ -69,6 +69,7 @@ ocserv_instances:
   - instance_id: "personal"
     domain: "{{ domains['ocserv_' + instance_id] }}"
     ipv4_network: "{{ vpn_subnets['ocserv_' + instance_id] }}"
+    udp_enabled: true
     tcp_port: "{{ ports.internal['ocserv_' + instance_id] }}"
     udp_port: "{{ ports.external['ocserv_' + instance_id].port }}"
     device: "vpn0"
@@ -80,7 +81,6 @@ ocserv_instances:
     ipv4_network: "{{ vpn_subnets['ocserv_' + instance_id] }}"
     tcp_port: "{{ ports.internal['ocserv_' + instance_id] }}"
     device: "vpn1"
-    udp_enabled: false
     max_same_clients: 3
     bandwidth: 65536000  # ~65MB/s
     camouflage_secret: "fr13nds_c4f3_p0rt4l"

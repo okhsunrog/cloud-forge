@@ -3,11 +3,11 @@ auth = "plain[passwd= {{ instance_paths.passwd_file }} ]"
 
 # TCP listening host and port
 listen-host = {{ instance.tcp_listen_host | default(ocserv_default_settings.tcp_listen_host) }}
-tcp-port = {{ instance.tcp_port | default(ocserv_default_settings.tcp_port) }}
+tcp-port = {{ instance.tcp_port }}
 
-{% if instance.udp_enabled | default(ocserv_default_settings.udp_enabled) %}
+{% if instance.udp_enabled %}
 # UDP settings
-udp-port = {{ instance.udp_port | default(ocserv_default_settings.udp_port) }}
+udp-port = {{ instance.udp_port }}
 udp-listen-host = {{ instance.udp_listen_host | default(ocserv_default_settings.udp_listen_host) }}
 {% endif %}
 
@@ -70,7 +70,7 @@ predictable-ips = true
 
 # The default domain to be advertised. Multiple domains (functional on
 # openconnect clients) can be provided in a space separated list.
-default-domain = "{{ ocserv_domain }}"
+default-domain = "{{ instance.domain }}"
 
 # IPv4 network
 ipv4-network = {{ instance.ipv4_network }}

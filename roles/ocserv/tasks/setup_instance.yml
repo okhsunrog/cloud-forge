@@ -14,7 +14,8 @@
     that:
       - instance.domain is defined
       - instance.ipv4_network is defined
-    fail_msg: "Each instance must have 'domain' and 'ipv4_network' defined. Missing for instance: {{ instance.instance_id }}"
+      - instance.tcp_port is defined
+    fail_msg: "Each instance must have 'domain', 'tcp_port' and 'ipv4_network' defined. Missing for instance: {{ instance.instance_id }}"
     success_msg: "Instance {{ instance.instance_id }} has all required parameters"
 
 - name: Create instance directories
