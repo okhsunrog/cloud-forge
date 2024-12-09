@@ -1,0 +1,30 @@
+# roles/fail2ban/templates/jail.local.j2
+
+[DEFAULT]
+bantime = {{ fail2ban_bantime }}
+findtime = {{ fail2ban_findtime }}
+maxretry = {{ fail2ban_maxretry }}
+ignoreip = {% for ip in fail2ban_ignoreip %}{{ ip }} {% endfor %}
+backend = {{ fail2ban_backend }}
+
+{% for jail_name, jail_conf in fail2ban_jails.items() %}
+[{{ jail_name }}]
+enabled = {{ jail_conf.enabled | default('true') }}
+port = {{ jail_conf.port | default('0') }}
+filter = {{ jail_conf.filter | default(jail_name) }}
+logpath = {{ jail_conf.logpath | default('/var/log/auth.log') }}
+
+{% if jail_conf.maxretry is defined %}
+maxretry = {{ jail_conf.maxretry }}
+{% endif %}
+{% if jail_conf.findtime is defined %}
+findtime = {{ jail_conf.findtime }}
+{% endif %}
+{% if jail_conf.bantime is defined %}
+bantime = {{ jail_conf.bantime }}
+{% endif %}
+{% if jail_conf.backend is defined %}
+backend = {{ jail_conf.backend }}
+{% endif %}
+
+{% endfor %}

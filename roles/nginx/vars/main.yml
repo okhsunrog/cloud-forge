@@ -1,6 +1,0 @@
----
-# Extract site names and domains from the provided domains.nginx variable
-nginx_sites: >-
-  {{
-    domains.nginx | dict2items | map(attribute='value') | map('community.general.json_query', '[].{server_names: @[0]}') | list
-  }}

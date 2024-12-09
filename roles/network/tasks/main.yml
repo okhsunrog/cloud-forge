@@ -38,15 +38,29 @@
     jump: ACCEPT
     ctstate: ESTABLISHED,RELATED
 
-- name: Configure firewall rules
+- name: Configure firewall rules for external ports
   iptables:
-    chain: "{{ item.chain }}"
-    jump: "{{ item.jump }}"
-    protocol: "{{ item.protocol | default(omit) }}"
-    destination_port: "{{ item.dport | default(omit) }}"
-    in_interface: "{{ item.in_interface | default(omit) }}"
-    icmp_type: "{{ item.icmp_type | default(omit) }}"
-  with_items: "{{ fw_rules }}"
+    chain: INPUT
+    jump: ACCEPT
+    protocol: "{{ item.value.type }}"
+    destination_port: "{{ item.value.port }}"
+  loop: "{{ ports.external | dict2items }}"
+  when: item.value.type != 'icmp'
+  notify: save iptables
+
+- name: Allow ICMP (Ping)
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    protocol: icmp
+    icmp_type: any
+  notify: save iptables
+
+- name: Allow loopback interface
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    in_interface: lo
   notify: save iptables
 
 - name: Set default policies

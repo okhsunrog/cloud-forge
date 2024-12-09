@@ -8,7 +8,7 @@
 - name: Copy nginx.conf
   copy:
     src: nginx.conf
-    dest: "{{ nginx_conf_path }}"
+    dest: "/etc/nginx/nginx.conf"
     owner: root
     group: root
     mode: '0644'

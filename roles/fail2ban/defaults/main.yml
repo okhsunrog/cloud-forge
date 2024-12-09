@@ -1,0 +1,46 @@
+---
+fail2ban_bantime: 3600  # 1 hour in seconds
+fail2ban_findtime: 600  # 10 minutes
+fail2ban_maxretry: 3
+fail2ban_ignoreip:
+  - "127.0.0.1/8"
+  - "::1"
+fail2ban_backend: systemd
+
+nginx_ports:
+  - "{{ ports.external.http.port }}"
+  - "{{ ports.internal.nginx_https }}"
+
+ports_list: "{{ nginx_ports | join(',') }}"
+
+ocserv_ports: "{{ ocserv_instances | map(attribute='tcp_port') | list }}"
+ocserv_ports_list: "{{ ocserv_ports | join(',') }}"
+
+fail2ban_jails:
+  sshd:
+    enabled: true
+    port: {{ ports.external.ssh.port }}
+    filter: sshd
+    logpath: /var/log/auth.log
+    maxretry: 3
+    backend: "{{ fail2ban_backend }}"
+
+  nginx-http-auth:
+    enabled: true
+    port: "{{ ports_list }}"
+    filter: nginx-http-auth
+    logpath: /var/log/nginx/error.log
+
+  nginx-botsearch:
+    enabled: true
+    port: "{{ ports_list }}"
+    filter: nginx-botsearch
+    logpath: /var/log/nginx/access.log
+    maxretry: 2
+
+  ocserv:
+    enabled: true
+    port: "{{ ocserv_ports_list }}"
+    filter: ocserv
+    logpath: /var/log/ocserv.log
+    maxretry: 3
