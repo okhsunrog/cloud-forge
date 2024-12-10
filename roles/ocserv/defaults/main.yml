@@ -26,3 +26,4 @@ ocserv_default_settings:
   camouflage_secret: "your_camouflage_secret"
   camouflage_realm: "Your Camouflage Realm"
   bandwidth: 0  # set to zero for no limit
+  

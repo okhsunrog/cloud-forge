@@ -1,25 +1,81 @@
 ---
-- name: Install Certbot and dependencies
-  apt:
-    name:
-      - certbot
-      - python3-certbot
-    state: present
-    update_cache: yes
-
-- name: Obtain SSL certificates for all domains
-  certbot_certificate:
-    domains: "{{ all_domains }}"
-    authenticator: standalone
-    installer: none
-    agree_tos: yes
-    email: "{{ email }}"
-    state: present
-  register: certbot_result
-
-- name: Set up auto-renewal cron job
-  cron:
-    name: "Certbot Auto Renewal"
-    job: "/usr/bin/certbot renew --quiet --pre-hook '{{ certbot_pre_hook }}' --post-hook '{{ certbot_post_hook }}'"
-    hour: 3
-    minute: 30
+  - name: Install Certbot and dependencies
+    apt:
+      name:
+        - certbot
+        - python3-certbot
+        - python3-certbot-nginx
+        - python3-openssl
+      state: present
+      update_cache: yes
+  
+  - name: Check if certificates exist and are up to date
+    shell: |
+      certbot certificates 2>/dev/null | grep "VALID:" | grep -v "EXPIRING SOON" || true
+    register: cert_status
+    changed_when: false
+  
+  - name: Check if nginx is running
+    service_facts:
+    register: services_state
+  
+  - name: Set nginx running fact
+    set_fact:
+      nginx_running: "{{ 'nginx.service' in services_state.ansible_facts.services and services_state.ansible_facts.services['nginx.service'].state == 'running' }}"
+  
+  - name: Find running ocserv services
+    command: systemctl list-units 'ocserv*.service' --state=running --no-legend | awk '{print $1}'
+    register: running_ocserv
+    changed_when: false
+  
+  - name: Stop nginx if running
+    systemd:
+      name: nginx
+      state: stopped
+    when: 
+      - cert_status.rc != 0
+      - nginx_running
+  
+  - name: Stop ocserv services if running
+    systemd:
+      name: "{{ item }}"
+      state: stopped
+    with_items: "{{ running_ocserv.stdout_lines }}"
+    when: cert_status.rc != 0
+  
+  - name: Obtain certificates
+    shell: certbot certonly --standalone --non-interactive --agree-tos -m {{ email }} -d {{ all_domains | join(',') }}
+    when: cert_status.rc != 0
+  
+  - name: Start nginx if it was running
+    systemd:
+      name: nginx
+      state: started
+    when: 
+      - cert_status.rc != 0
+      - nginx_running
+  
+  - name: Start ocserv services
+    systemd:
+      name: "{{ item }}"
+      state: started
+    with_items: "{{ running_ocserv.stdout_lines }}"
+    when: cert_status.rc != 0
+  
+  - name: Create certbot renewal timer
+    template:
+      src: certbot-renewal.timer.j2
+      dest: /etc/systemd/system/certbot-renewal.timer
+    notify: reload systemd
+  
+  - name: Create certbot renewal service
+    template:
+      src: certbot-renewal.service.j2
+      dest: /etc/systemd/system/certbot-renewal.service
+    notify: reload systemd
+  
+  - name: Enable and start certbot renewal timer
+    systemd:
+      name: certbot-renewal.timer
+      state: started
+      enabled: yes

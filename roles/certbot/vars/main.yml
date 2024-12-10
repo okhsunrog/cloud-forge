@@ -20,6 +20,3 @@ all_domains: >-
 
 # Generate service names for ocserv instances
 ocserv_service_names: "{{ ocserv_instances | map(attribute='instance_id') | map('regex_replace', '^', 'ocserv-') | join(' ') }}"
-
-certbot_pre_hook: "systemctl stop nginx {{ ocserv_service_names }}"
-certbot_post_hook: "systemctl start nginx {{ ocserv_service_names }}"

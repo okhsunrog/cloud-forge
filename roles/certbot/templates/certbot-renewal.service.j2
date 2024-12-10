@@ -1,0 +1,14 @@
+[Unit]
+Description=Certbot Renewal Service
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/systemctl stop nginx {% for service in running_ocserv.stdout_lines %}{{ service }} {% endfor %}
+ExecStart=/usr/bin/certbot renew --quiet
+ExecStartPost=/usr/bin/systemctl start nginx {% for service in running_ocserv.stdout_lines %}{{ service }} {% endfor %}
+
+[Install]
+WantedBy=multi-user.target
+
+
