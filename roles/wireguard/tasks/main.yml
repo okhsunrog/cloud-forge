@@ -26,6 +26,11 @@
   args:
     creates: "{{ wireguard_public_key_path }}"
 
+- name: Read public key
+  slurp:
+    src: "{{ wireguard_public_key_path }}"
+  register: wireguard_public_key
+
 - name: Create client configs directory
   file:
     path: "{{ wireguard_clients_dir }}"

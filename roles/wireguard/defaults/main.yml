@@ -1,5 +1,6 @@
 wireguard_interface: "wg0"
 wireguard_address: "{{ vpn_subnets.wireguard }}"
+wireguard_port: "{{ ports.external.wireguard.port }}"
 wireguard_private_key_path: "/etc/wireguard/private.key"
 wireguard_public_key_path: "/etc/wireguard/public.key"
 wireguard_config_path: "/etc/wireguard"
