@@ -19,7 +19,7 @@ ocserv_ports_list: "{{ ocserv_ports | join(',') }}"
 fail2ban_jails:
   sshd:
     enabled: true
-    port: {{ ports.external.ssh.port }}
+    port: "{{ ports.external.ssh.port }}"
     filter: sshd
     logpath: /var/log/auth.log
     maxretry: 3
