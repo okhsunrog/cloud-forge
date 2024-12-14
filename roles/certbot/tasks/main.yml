@@ -11,9 +11,10 @@
 
 - name: Check if certificates exist and are up to date
   shell: |
-    certbot certificates 2>/dev/null | grep "VALID:" | grep -v "EXPIRING SOON" || true
+    certbot certificates 2>/dev/null | grep "VALID:" | grep -v "EXPIRING SOON"
   register: cert_status
   changed_when: false
+  failed_when: false
 
 - name: Check if nginx is running
   service_facts:
@@ -30,24 +31,22 @@
   when: 
     - cert_status.rc != 0
     - nginx_running
-
-- name: Debug variables
-  debug:
-    msg: 
-      - "Email: {{ email }}"
-      - "Domains: {{ all_domains }}"
-
-- name: Check certbot path
-  stat:
-    path: /etc/letsencrypt/live
-  register: cert_path
   
-- name: Show certificate path status
+- name: Debug all_domains raw
   debug:
-    var: cert_path
+    var: all_domains
+    verbosity: 0
+
+- name: Convert domains to proper list
+  set_fact:
+    domains_list: "{{ all_domains | from_yaml | flatten | unique | list }}"
+
+- name: Debug final domains list
+  debug:
+    var: domains_list
 
 - name: Obtain certificates
-  shell: certbot certonly --standalone --non-interactive --agree-tos -m {{ email }} -d {{ all_domains | join(',') }}
+  shell: certbot certonly --standalone --non-interactive --agree-tos -m {{ email }} -d {{ domains_list | join(',') }}
   when: cert_status.rc != 0
 
 - name: Start nginx if it was running
