@@ -20,9 +20,10 @@
   roles:
     - base_system
     - wireguard
-    # - certbot
-    # - haproxy
-    # - nginx
-    # - ocserv
+    - certbot
+    - haproxy
+    - nginx
+    - ocserv
+    - certbot_renewal_config
     - network
-    # - fail2ban
+    - fail2ban

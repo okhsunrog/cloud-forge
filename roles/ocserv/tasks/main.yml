@@ -15,3 +15,10 @@
   loop_control:
     loop_var: instance
     label: "{{ instance.instance_id }}"
+
+- name: Register deployed ocserv services
+  set_fact:
+    ocserv_deployed_services: "{{ ocserv_deployed_services | default([]) + ['ocserv-' + instance.instance_id + '.service'] }}"
+  loop: "{{ ocserv_instances }}"
+  loop_control:
+    loop_var: instance

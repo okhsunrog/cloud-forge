@@ -1,5 +1,5 @@
 ---
-- name: restart ocserv {{ instance_name }}
+- name: "restart ocserv {{ instance.instance_id }}"
   systemd:
     name: "ocserv-{{ instance_name }}"
     state: restarted

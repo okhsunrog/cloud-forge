@@ -1,0 +1,29 @@
+---
+- name: Find running ocserv services
+  command: systemctl list-units 'ocserv*.service' --state=running --no-legend | awk '{print $1}'
+  register: running_ocserv
+  changed_when: false
+
+- name: Debug services
+  debug:
+    msg: 
+      - "Running ocserv services: {{ running_ocserv.stdout_lines }}"
+      - "Deployed ocserv services: {{ ocserv_deployed_services }}"
+
+- name: Create updated certbot renewal service
+  template:
+    src: "{{ playbook_dir }}/roles/certbot/templates/certbot-renewal.service.j2"
+    dest: /etc/systemd/system/certbot-renewal.service
+  notify: reload systemd
+
+- name: Create certbot renewal timer
+  template:
+    src: "{{ playbook_dir }}/roles/certbot/templates/certbot-renewal.timer.j2"
+    dest: /etc/systemd/system/certbot-renewal.timer
+  notify: reload systemd
+
+- name: Enable and start certbot renewal timer
+  systemd:
+    name: certbot-renewal.timer
+    state: started
+    enabled: yes

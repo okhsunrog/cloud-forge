@@ -16,7 +16,3 @@ all_domains: >-
   {%- endmacro -%}
   {{ extract_domains(domains) }}
   {{ domains_list }}
-
-
-# Generate service names for ocserv instances
-ocserv_service_names: "{{ ocserv_instances | map(attribute='instance_id') | map('regex_replace', '^', 'ocserv-') | join(' ') }}"
