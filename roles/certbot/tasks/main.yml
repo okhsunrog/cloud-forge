@@ -32,18 +32,9 @@
     - cert_status.rc != 0
     - nginx_running
   
-- name: Debug all_domains raw
-  debug:
-    var: all_domains
-    verbosity: 0
-
 - name: Convert domains to proper list
   set_fact:
     domains_list: "{{ all_domains | from_yaml | flatten | unique | list }}"
-
-- name: Debug final domains list
-  debug:
-    var: domains_list
 
 - name: Obtain certificates for each domain
   shell: >

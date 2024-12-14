@@ -45,9 +45,17 @@
     instance_name: "{{ instance.instance_id }}"
 
 - name: Add ocserv users
-  command: echo "{{ item.password }}" | ocpasswd -c {{ instance_paths.passwd_file }} {{ item.username }}
+  shell: echo "{{ item.password }}" | ocpasswd -c {{ instance_paths.passwd_file }} {{ item.username }}
   loop: "{{ ocserv_users[instance.instance_id] }}"
   no_log: true
   notify: restart ocserv instance
+  vars:
+    instance_name: "{{ instance.instance_id }}"
+
+- name: Enable and start ocserv service
+  systemd:
+    name: "ocserv-{{ instance.instance_id }}"
+    state: started
+    enabled: yes
   vars:
     instance_name: "{{ instance.instance_id }}"
