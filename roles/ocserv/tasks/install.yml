@@ -12,8 +12,8 @@
       - protobuf-c-compiler
       - libhttp-parser-dev
       - gperf
-  state: present
-  update_cache: yes
+    state: present
+    update_cache: yes
 
 - name: Create build directory
   file:

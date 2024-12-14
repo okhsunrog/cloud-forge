@@ -67,19 +67,20 @@ domains:
 
 ocserv_instances:
   - instance_id: "personal"
-    domain: "{{ domains['ocserv_' + instance.instance_id] }}"
-    ipv4_network: "{{ vpn_subnets['ocserv_' + instance_id] }}"
+    domain: "{{ domains['ocserv_personal'] }}"
+    ipv4_network: "{{ vpn_subnets['ocserv_personal'] }}"
     udp_enabled: true
-    tcp_port: "{{ ports.internal['ocserv_' + instance_id] }}"
-    udp_port: "{{ ports.external['ocserv_' + instance_id].port }}"
+    tcp_port: "{{ ports.internal['ocserv_personal'] }}"
+    udp_port: "{{ ports.external['ocserv_personal'].port }}"
     device: "vpn0"
     camouflage_secret: "p3rs0n4l_4cc3ss_0nly"
     camouflage_realm: "Nginx Admin Portal"
 
   - instance_id: "friends"
-    domain: "{{ domains['ocserv_' + instance.instance_id] }}"
-    ipv4_network: "{{ vpn_subnets['ocserv_' + instance_id] }}"
-    tcp_port: "{{ ports.internal['ocserv_' + instance_id] }}"
+    domain: "{{ domains['ocserv_friends'] }}"
+    ipv4_network: "{{ vpn_subnets['ocserv_friends'] }}"
+    tcp_port: "{{ ports.internal['ocserv_friends'] }}"
+    udp_enabled: false
     device: "vpn1"
     max_same_clients: 3
     bandwidth: 65536000  # ~65MB/s

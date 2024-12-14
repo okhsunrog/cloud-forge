@@ -1,7 +1,8 @@
 ---
-- name: "restart ocserv {{ instance.instance_id }}"
+- name: restart ocserv instance
   systemd:
-    name: "ocserv-{{ instance_name }}"
+    name: "ocserv-{{ item }}"
     state: restarted
     daemon_reload: yes
-
+  loop: "{{ [instance_name] if instance_name is defined else ocserv_instances_names }}"
+  listen: restart ocserv instance

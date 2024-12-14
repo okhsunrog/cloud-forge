@@ -32,16 +32,22 @@
   template:
     src: ocserv.conf.j2
     dest: "{{ instance_paths.config_file }}"
-  notify: restart ocserv {{ instance.instance_id }}
+  notify: restart ocserv instance
+  vars:
+    instance_name: "{{ instance.instance_id }}"
 
 - name: Template systemd service
   template:
     src: ocserv.service.j2
     dest: "/etc/systemd/system/ocserv-{{ instance.instance_id }}.service"
-  notify: restart ocserv {{ instance.instance_id }}
+  notify: restart ocserv instance
+  vars:
+    instance_name: "{{ instance.instance_id }}"
 
 - name: Add ocserv users
   command: echo "{{ item.password }}" | ocpasswd -c {{ instance_paths.passwd_file }} {{ item.username }}
   loop: "{{ ocserv_users[instance.instance_id] }}"
   no_log: true
-  notify: restart ocserv {{ instance.instance_id }}
+  notify: restart ocserv instance
+  vars:
+    instance_name: "{{ instance.instance_id }}"

@@ -5,6 +5,10 @@
   ignore_errors: true
   changed_when: false
 
+- name: Register ocserv instances
+  set_fact:
+    ocserv_instances_names: "{{ ocserv_instances | map(attribute='instance_id') | list }}"
+
 - name: Include installation tasks if ocserv is not installed
   include_tasks: install.yml
   when: ocserv_check.rc != 0
