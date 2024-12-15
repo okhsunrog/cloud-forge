@@ -1,6 +1,6 @@
 ---
 - name: Find running ocserv services
-  command: systemctl list-units 'ocserv*.service' --state=running --no-legend | awk '{print $1}'
+  shell: systemctl list-units 'ocserv*.service' --no-legend | awk '{print $1}'
   register: running_ocserv
   changed_when: false
 

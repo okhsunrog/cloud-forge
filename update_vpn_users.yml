@@ -1,0 +1,9 @@
+---
+- name: Update VPN Users
+  hosts: vps
+  become: true
+  gather_facts: true
+
+  roles:
+    - wireguard
+    - ocserv

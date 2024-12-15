@@ -20,11 +20,10 @@
 
 - name: Create instance directories
   file:
-    path: "{{ item | dirname }}"
+    path: "{{ item }}"
     state: directory
     mode: '0755'
   loop:
-    - "{{ instance_paths.config_file }}"
     - "{{ instance_paths.config_per_user }}"
     - "{{ instance_paths.config_per_group }}"
 

@@ -43,6 +43,7 @@
     dest: "{{ wireguard_config_path }}/{{ wireguard_interface }}.conf"
     mode: '0600'
   notify: restart wireguard
+  no_log: true
 
 - name: Generate client configs
   template:
@@ -51,6 +52,7 @@
     mode: '0600'
   loop: "{{ wireguard_peers }}"
   notify: restart wireguard
+  no_log: true
 
 - name: Enable and start wireguard
   systemd:
