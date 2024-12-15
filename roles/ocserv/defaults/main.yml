@@ -6,9 +6,9 @@ ocserv_build_dir: "~/ocserv-build"
 # Base paths for instances
 ocserv_base_paths:
   passwd_file: "/etc/ocserv/ocpasswd-{id}"
-  socket_file: "/var/run/ocserv-{id}.socket"
+  socket_file: "/run/ocserv-{id}.socket"
   config_file: "/etc/ocserv/{id}.conf"
-  pid_file: "/var/run/ocserv-{id}.pid"
+  pid_file: "/run/ocserv-{id}.pid"
   config_per_user: "/etc/ocserv/config-per-user-{id}"
   config_per_group: "/etc/ocserv/config-per-group-{id}"
 
