@@ -7,15 +7,15 @@
   pre_tasks:
     - name: Check OS version
       debug:
-        msg: "Running on Debian {{ ansible_distribution_version }}"
-      when: ansible_distribution == "Debian" and ansible_distribution_version | float >= 12.0
+        msg: "Running on Ubuntu {{ ansible_distribution_version }}"
+      when: ansible_distribution == "Ubuntu" and ansible_distribution_version in ['22.04', '24.04']
 
-    - name: Verify Debian 12 or higher
+    - name: Verify Ubuntu 22.04 or higher
       fail:
-        msg: "This playbook requires Debian 12 (Bookworm) or higher"
+        msg: "This playbook requires Ubuntu 22.04 (Jammy) or higher"
       when: >
-        ansible_distribution != "Debian" or 
-        ansible_distribution_version | float < 12.0
+        ansible_distribution != "Ubuntu" or 
+        ansible_distribution_version not in ['22.04', '24.04']
 
   roles:
     - base_system

@@ -1,13 +1,20 @@
 ---
-- name: Install Certbot and dependencies
+- name: Remove system certbot packages
   apt:
-    name:
-      - certbot
-      - python3-certbot
-      - python3-certbot-nginx
-      - python3-openssl
-    state: present
-    update_cache: yes
+    name: certbot
+    state: absent
+    purge: yes
+
+- name: Install certbot via snap
+  snap:
+    name: certbot
+    classic: yes
+
+- name: Create certbot symlink
+  file:
+    src: /snap/bin/certbot
+    dest: /usr/bin/certbot
+    state: link
 
 - name: Check if certificates exist and are up to date
   shell: |
