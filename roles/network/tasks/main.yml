@@ -32,6 +32,18 @@
     out_interface: eth0
   with_dict: "{{ vpn_subnets }}"
 
+- name: Block internal traffic in friends VPN network
+  iptables:
+    chain: FORWARD
+    source: "{{ vpn_subnets.ocserv_friends }}"
+    destination: "{{ item }}"
+    jump: DROP
+  loop:
+    - "{{ vpn_subnets.ocserv_friends }}"
+    - "{{ vpn_subnets.ocserv_personal }}"
+    - "{{ vpn_subnets.wireguard }}"
+  when: vpn_subnets.ocserv_friends is defined
+
 - name: Allow established connections
   iptables:
     chain: INPUT

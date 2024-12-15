@@ -2,6 +2,16 @@
 PrivateKey = {{ item.private_key }}
 Address = {{ item.ip }}/32
 DNS = 94.140.14.14, 94.140.15.15
+{# MTU = 1420 #}
+Jc = 64
+Jmin = 40
+Jmax = 400
+S1 = 0
+S2 = 0
+H1 = 1
+H2 = 2
+H3 = 3
+H4 = 4
 
 [Peer]
 PublicKey = {{ wireguard_public_key.content | b64decode }}
