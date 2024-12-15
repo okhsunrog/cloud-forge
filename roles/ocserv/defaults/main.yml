@@ -22,7 +22,7 @@ ocserv_default_settings:
   dns_servers:
     - "94.140.14.14"
     - "94.140.15.15"
-  mtu: 1472
+  mtu: 1500
   camouflage_secret: "your_camouflage_secret"
   camouflage_realm: "Your Camouflage Realm"
   bandwidth: 0  # set to zero for no limit
