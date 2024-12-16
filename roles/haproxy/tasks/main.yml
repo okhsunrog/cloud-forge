@@ -1,20 +1,12 @@
 ---
-- name: Download and dearmor HAProxy GPG key
-  shell: |
-    curl https://haproxy.debian.net/bernat.debian.org.gpg | gpg --dearmor > /usr/share/keyrings/haproxy.debian.net.gpg
-  args:
-    creates: /usr/share/keyrings/haproxy.debian.net.gpg
-
-- name: Add HAProxy repository
-  copy:
-    content: >
-      deb [signed-by=/usr/share/keyrings/haproxy.debian.net.gpg]
-      http://haproxy.debian.net bookworm-backports-2.9 main
-    dest: /etc/apt/sources.list.d/haproxy.list
+- name: Add HAProxy PPA
+  apt_repository:
+    repo: ppa:vbernat/haproxy-2.9
+    state: present
 
 - name: Install HAProxy
   apt:
-    name: haproxy=2.9.*
+    name: haproxy
     update_cache: yes
 
 - name: Template HAProxy configuration
