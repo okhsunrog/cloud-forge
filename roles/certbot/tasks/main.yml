@@ -1,10 +1,10 @@
 ---
-- name: Remove system certbot packages
-  apt:
-    name: certbot
-    state: absent
-    purge: yes
-
+# - name: Remove system certbot packages
+#   apt:
+#     name: certbot
+#     state: absent
+#     purge: yes
+#
 - name: Install certbot via snap
   snap:
     name: certbot

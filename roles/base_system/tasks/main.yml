@@ -58,7 +58,6 @@
       - foot-terminfo
       - kitty-terminfo
       - build-essential
-      - certbot
       - rsync
       - aria2
       - snapd
