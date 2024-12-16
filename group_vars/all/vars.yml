@@ -73,7 +73,7 @@ ocserv_instances:
     tcp_port: "{{ ports.internal['ocserv_personal'] }}"
     udp_port: "{{ ports.external['ocserv_personal'].port }}"
     device: "vpn0"
-    camouflage_secret: "p3rs0n4l_4cc3ss_0nly"
+    camouflage_secret: "mislinxxteal"
     camouflage_realm: "Nginx Admin Portal"
 
   - instance_id: "friends"
@@ -83,6 +83,6 @@ ocserv_instances:
     udp_enabled: false
     device: "vpn1"
     max_same_clients: 3
-    bandwidth: 65536000  # ~65MB/s
-    camouflage_secret: "fr13nds_c4f3_p0rt4l"
+    bandwidth: 65536000  # ~650MB/s
+    camouflage_secret: "mislinxxteal"
     camouflage_realm: "Apache Admin Portal"

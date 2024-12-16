@@ -5,5 +5,5 @@
   gather_facts: true
 
   roles:
-    - wireguard
+    # - wireguard
     - ocserv

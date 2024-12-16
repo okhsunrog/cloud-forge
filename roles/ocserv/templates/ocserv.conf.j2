@@ -76,10 +76,14 @@ default-domain = "{{ instance.domain }}"
 ipv4-network = {{ instance.ipv4_network }}
 tunnel-all-dns = true
 
+
 # DNS servers
+
 {%- for dns_server in instance.dns_servers | default(ocserv_default_settings.dns_servers) %}
+
 dns = {{ dns_server }}
-{%- endfor %}
+{% endfor %}
+
 
 # Routes
 route = default
@@ -101,12 +105,14 @@ camouflage_realm = "{{ instance.camouflage_realm | default(ocserv_default_settin
 
 
 # Traffic shaping settings
-# Unset to enable bandwidth restrictions (in bytes/sec). The
+# Enable bandwidth restrictions (in bytes/sec). The
 # setting here is global, but can also be set per user or per group.
 # The RX direction refers to received data on the server from the
 # VPN client, and the TX refers to transmitted data by the server
 # to the client.
+
 {%- if instance.bandwidth | default(ocserv_default_settings.bandwidth) | int > 0 %}
+
 rx-data-per-sec = {{ instance.bandwidth | default(ocserv_default_settings.bandwidth) }}
 tx-data-per-sec = {{ instance.bandwidth | default(ocserv_default_settings.bandwidth) }}
 {%- endif %}
