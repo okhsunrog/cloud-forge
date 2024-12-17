@@ -1,0 +1,28 @@
+---
+vault_vps_ip: 154.65.82.48
+vault_root_password: "pass1234"
+
+ocserv_users:
+  personal:
+    - username: "nova"
+      password: "passw132"
+    - username: "orion"
+      password: "42wf"
+    - username: "husky"
+      password: "234lj"
+  friends:
+    - username: "allinli"
+      password: "test12345"
+    - username: "sneg"
+      password: "5231"
+
+wireguard_peers:
+  - name: "husky"
+    private_key: "key"
+    public_key: "key"
+    ip: "10.26.66.5"
+  - name: "mira"
+    private_key: "key"
+    public_key: "key"
+    ip: "10.26.66.2"
+ 
