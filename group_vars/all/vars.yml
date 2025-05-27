@@ -7,7 +7,7 @@ vpn_subnets: # CIDR notation, these subnets will be added to iptables rules (mas
 # Network ports configuration, used by all playbooks
 ports:
   external: # used by iptables
-    ssh: 
+    ssh:
       port: 22
       type: tcp
     https:
@@ -29,7 +29,7 @@ ports:
     nginx_https: 8443
 
 reverse_proxy: # used by nginx
-  nas_ip: '10.66.66.2'
+  nas_ip: "10.67.76.248" # on ocserv_personal for now
   ports:
     jellyfin: 8096
     nextcloud: 2345
@@ -37,7 +37,6 @@ reverse_proxy: # used by nginx
     forgejo: 3000
     snake: 8081
     snake_webrtc: 8082
-
 
 email: "me@okhsunrog.dev" # for certbot
 
@@ -63,8 +62,6 @@ domains:
     #   - "serpentina.okhsunrog.ru"
     #   - "snake.okhsunrog.dev"
 
-
-
 ocserv_instances:
   - instance_id: "personal"
     domain: "{{ domains['ocserv_personal'] }}"
@@ -83,6 +80,6 @@ ocserv_instances:
     udp_enabled: false
     device: "vpn1"
     max_same_clients: 3
-    bandwidth: 65536000  # ~650MB/s
+    bandwidth: 65536000 # ~650MB/s
     camouflage_secret: "mislinxxteal"
     camouflage_realm: "Apache Admin Portal"
