@@ -14,7 +14,7 @@ ports:
       port: 443
       type: tcp
     wireguard:
-      port: 51820
+      port: 58889
       type: udp
     http:
       port: 80
@@ -29,7 +29,7 @@ ports:
     nginx_https: 8443
 
 reverse_proxy: # used by nginx
-  nas_ip: "10.67.76.248" # on ocserv_personal for now
+  nas_ip: "10.66.66.2" # on wireguard
   ports:
     jellyfin: 8096
     nextcloud: 2345
