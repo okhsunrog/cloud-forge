@@ -1,0 +1,114 @@
+---
+- name: Fix Ubuntu sources for DKMS (Ubuntu 24.04)
+  blockinfile:
+    path: /etc/apt/sources.list.d/ubuntu.sources
+    marker: "# {mark} ANSIBLE MANAGED - AmneziaWG DKMS"
+    block: |
+      Types: deb deb-src
+      URIs: http://archive.ubuntu.com/ubuntu/
+      Suites: noble noble-updates noble-backports
+      Components: main restricted universe multiverse
+      Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+    create: yes
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_version == '24.04'
+
+- name: Install prerequisites for AmneziaWG
+  apt:
+    name:
+      - software-properties-common
+      - python3-launchpadlib
+      - gnupg2
+      - linux-headers-{{ ansible_kernel }}
+      - build-essential
+      - dkms
+    state: present
+    update_cache: yes
+
+- name: Add AmneziaWG PPA key
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: 57290828
+    state: present
+
+- name: Add AmneziaWG PPA repository
+  apt_repository:
+    repo: "deb https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu {{ 'noble' if ansible_distribution_version == '24.04' else 'focal' }} main"
+    state: present
+
+- name: Add AmneziaWG PPA source repository  
+  apt_repository:
+    repo: "deb-src https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu {{ 'noble' if ansible_distribution_version == '24.04' else 'focal' }} main"
+    state: present
+
+- name: Update apt cache and install AmneziaWG
+  apt:
+    name: amneziawg
+    state: present
+    update_cache: yes
+
+- name: Create AmneziaWG config directory
+  file:
+    path: "{{ amneziawg_config_path }}"
+    state: directory
+    mode: '0700'
+
+- name: Check if private key exists
+  stat:
+    path: "{{ amneziawg_private_key_path }}"
+  register: private_key_file
+
+- name: Generate private key if not exists
+  shell: awg genkey > {{ amneziawg_private_key_path }}
+  args:
+    creates: "{{ amneziawg_private_key_path }}"
+  when: not private_key_file.stat.exists
+
+- name: Set proper permissions on private key
+  file:
+    path: "{{ amneziawg_private_key_path }}"
+    mode: '0600'
+
+- name: Read private key
+  slurp:
+    src: "{{ amneziawg_private_key_path }}"
+  register: amneziawg_private_key
+
+- name: Generate public key
+  shell: echo "{{ amneziawg_private_key.content | b64decode | trim }}" | awg pubkey > {{ amneziawg_public_key_path }}
+  args:
+    creates: "{{ amneziawg_public_key_path }}"
+
+- name: Read public key
+  slurp:
+    src: "{{ amneziawg_public_key_path }}"
+  register: amneziawg_public_key
+
+- name: Create client configs directory
+  file:
+    path: "{{ amneziawg_clients_dir }}"
+    state: directory
+    mode: '0700'
+
+- name: Generate server config
+  template:
+    src: awg0.conf.j2
+    dest: "{{ amneziawg_config_path }}/{{ amneziawg_interface }}.conf"
+    mode: '0600'
+  notify: restart amneziawg
+  no_log: true
+
+- name: Generate client configs
+  template:
+    src: client.conf.j2
+    dest: "{{ amneziawg_clients_dir }}/{{ item.name }}.conf"
+    mode: '0600'
+  loop: "{{ amneziawg_peers }}"
+  notify: restart amneziawg
+  no_log: true
+  when: amneziawg_peers is defined
+
+- name: Enable and start AmneziaWG
+  systemd:
+    name: "awg-quick@{{ amneziawg_interface }}"
+    enabled: yes
+    state: started

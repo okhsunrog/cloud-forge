@@ -42,6 +42,7 @@
     - "{{ vpn_subnets.ocserv_friends }}"
     - "{{ vpn_subnets.ocserv_personal }}"
     - "{{ vpn_subnets.wireguard }}"
+    - "{{ vpn_subnets.amneziawg }}"
   when: vpn_subnets.ocserv_friends is defined
 
 - name: Allow established connections

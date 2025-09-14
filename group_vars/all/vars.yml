@@ -3,6 +3,7 @@ vpn_subnets: # CIDR notation, these subnets will be added to iptables rules (mas
   ocserv_personal: "10.67.76.0/24"
   ocserv_friends: "10.68.68.0/24"
   wireguard: "10.66.66.0/24"
+  amneziawg: "10.65.65.0/24"
 
 # Network ports configuration, used by all playbooks
 ports:
@@ -15,6 +16,9 @@ ports:
       type: tcp
     wireguard:
       port: 58889
+      type: udp
+    amneziawg:
+      port: 58888
       type: udp
     http:
       port: 80

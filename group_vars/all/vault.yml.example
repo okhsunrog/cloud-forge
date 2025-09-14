@@ -25,4 +25,18 @@ wireguard_peers:
     private_key: "key"
     public_key: "key"
     ip: "10.26.66.2"
+
+amneziawg_peers:
+  - name: "nova"
+    private_key: "private_key_generated_by_awg_genkey"
+    public_key: "public_key_generated_by_awg_pubkey"
+    ip: "10.65.65.2"
+  - name: "phantom"
+    private_key: "private_key_generated_by_awg_genkey"
+    public_key: "public_key_generated_by_awg_pubkey"
+    ip: "10.65.65.3"
+  - name: "mobile"
+    private_key: "private_key_generated_by_awg_genkey"
+    public_key: "public_key_generated_by_awg_pubkey"
+    ip: "10.65.65.10"
  

@@ -20,6 +20,7 @@
   roles:
     - base_system
     - wireguard
+    - amneziawg
     - certbot
     - haproxy
     - nginx
