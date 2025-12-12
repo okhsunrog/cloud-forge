@@ -26,9 +26,12 @@ ports:
     ocserv_personal:
       port: 443
       type: udp
-    coturn:
-      port: 3478
-      type: both  # UDP and TCP
+    # coturn:
+    #   port: 3478
+    #   type: both  # UDP and TCP (TURN - disabled, using TURNS only)
+    coturn_tls:
+      port: 5349
+      type: both  # UDP and TCP (TURNS)
     coturn_relay_min:
       port: 49152
       type: udp

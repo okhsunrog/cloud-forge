@@ -1,4 +1,4 @@
-coturn_listening_port: "{{ ports.external.coturn.port }}"
+# coturn_listening_port: "{{ ports.external.coturn.port }}"  # Disabled - using TURNS only
 coturn_relay_min_port: "{{ ports.external.coturn_relay_min.port }}"
 coturn_relay_max_port: "{{ ports.external.coturn_relay_max.port }}"
 coturn_realm: "{{ domains.coturn }}"

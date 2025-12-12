@@ -5,26 +5,44 @@
     state: present
     update_cache: yes
 
+- name: Write server private key from vault
+  copy:
+    content: "{{ wireguard_server_private_key }}"
+    dest: "{{ wireguard_private_key_path }}"
+    mode: '0600'
+  when: wireguard_server_private_key is defined
+  no_log: true
+
+- name: Write server public key from vault
+  copy:
+    content: "{{ wireguard_server_public_key }}"
+    dest: "{{ wireguard_public_key_path }}"
+    mode: '0600'
+  when: wireguard_server_public_key is defined
+
 - name: Check if private key exists
   stat:
     path: "{{ wireguard_private_key_path }}"
   register: private_key_file
 
-- name: Generate private key if not exists
+- name: Generate private key if not exists and not in vault
   shell: wg genkey > {{ wireguard_private_key_path }}
   args:
     creates: "{{ wireguard_private_key_path }}"
-  when: not private_key_file.stat.exists
+  when:
+    - not private_key_file.stat.exists
+    - wireguard_server_private_key is not defined
 
 - name: Read private key
   slurp:
     src: "{{ wireguard_private_key_path }}"
   register: wireguard_private_key
 
-- name: Generate public key
+- name: Generate public key if not exists and not in vault
   shell: echo "{{ wireguard_private_key.content | b64decode }}" | wg pubkey > {{ wireguard_public_key_path }}
   args:
     creates: "{{ wireguard_public_key_path }}"
+  when: wireguard_server_public_key is not defined
 
 - name: Read public key
   slurp:

@@ -1,0 +1,82 @@
+---
+- name: Create blogdeploy user
+  user:
+    name: blogdeploy
+    shell: /bin/bash
+    create_home: yes
+    state: present
+
+- name: Create blog directory
+  file:
+    path: /var/www/blog
+    state: directory
+    owner: blogdeploy
+    group: blogdeploy
+    mode: '0755'
+
+- name: Create .ssh directory for blogdeploy
+  file:
+    path: /home/blogdeploy/.ssh
+    state: directory
+    owner: blogdeploy
+    group: blogdeploy
+    mode: '0700'
+
+- name: Check if SSH key exists
+  stat:
+    path: /home/blogdeploy/.ssh/deploy_key
+  register: deploy_key_stat
+
+- name: Generate SSH key pair for blog deployment
+  command: ssh-keygen -t ed25519 -f /home/blogdeploy/.ssh/deploy_key -N ""
+  args:
+    creates: /home/blogdeploy/.ssh/deploy_key
+  when: not deploy_key_stat.stat.exists
+
+- name: Set ownership on SSH keys
+  file:
+    path: "{{ item }}"
+    owner: blogdeploy
+    group: blogdeploy
+    mode: '0600'
+  loop:
+    - /home/blogdeploy/.ssh/deploy_key
+    - /home/blogdeploy/.ssh/deploy_key.pub
+
+- name: Read public key from remote server
+  slurp:
+    src: /home/blogdeploy/.ssh/deploy_key.pub
+  register: blog_deploy_public_key
+
+- name: Add public key to authorized_keys
+  authorized_key:
+    user: blogdeploy
+    key: "{{ blog_deploy_public_key.content | b64decode }}"
+    state: present
+
+- name: Display instructions for GitHub secrets setup
+  debug:
+    msg: |
+
+      ========================================
+      BLOG DEPLOYMENT SSH KEY GENERATED
+      ========================================
+
+      SSH key pair created at: /home/blogdeploy/.ssh/deploy_key
+
+      To add the private key to GitHub Secrets:
+
+      1. SSH to your server and read the private key:
+         ssh your-vps
+         sudo cat /home/blogdeploy/.ssh/deploy_key
+
+      2. Copy the entire output (including BEGIN/END lines)
+
+      3. Go to GitHub → Your repo → Settings → Secrets and variables → Actions
+         Create new secret:
+         Name: SSH_PRIVATE_KEY
+         Value: [paste the private key]
+
+      ========================================
+
+  when: not deploy_key_stat.stat.exists

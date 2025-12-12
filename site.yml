@@ -24,6 +24,7 @@
     - certbot
     - haproxy
     - nginx
+    - blog_deploy
     - ocserv
     - coturn
     - certbot_renewal_config

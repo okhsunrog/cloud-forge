@@ -1,8 +1,8 @@
 # Coturn TURN/STUN server configuration for Nextcloud Talk
 # {{ ansible_managed }}
 
-# Listening port for STUN/TURN
-listening-port={{ coturn_listening_port }}
+# Listening port for STUN/TURN (disabled - using TURNS only)
+# listening-port=3478
 
 # Listening IP (0.0.0.0 for all interfaces)
 listening-ip=0.0.0.0
@@ -42,8 +42,8 @@ cipher-list="ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES
 # Disable TCP relay endpoints (optional, use only if needed)
 # no-tcp-relay
 
-# Enable TLS
-# tls-listening-port=5349
+# Enable TLS/TURNS
+tls-listening-port=5349
 
 # Disable TLS 1.0 and 1.1
 no-tlsv1
@@ -55,14 +55,8 @@ mobility
 # Fingerprint in TURN messages
 fingerprint
 
-# Long-term credentials mechanism
-lt-cred-mech
-
 # No multicast peers
 no-multicast-peers
-
-# Deny peer access to private IP ranges
-no-loopback-peers
 
 # User quota (max 100 concurrent sessions per user)
 user-quota=100
