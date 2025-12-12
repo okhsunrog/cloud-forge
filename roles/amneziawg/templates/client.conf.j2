@@ -6,7 +6,7 @@ MTU = 1420
 
 [Peer]
 PublicKey = {{ amneziawg_public_key.content | b64decode | trim }}
-Endpoint = {{ ansible_default_ipv4.address }}:{{ amneziawg_port }}
+Endpoint = {{ ansible_facts['default_ipv4']['address'] }}:{{ amneziawg_port }}
 AllowedIPs = 0.0.0.0/0
 
 # AmneziaWG obfuscation parameters for DPI bypass

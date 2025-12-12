@@ -26,6 +26,15 @@ ports:
     ocserv_personal:
       port: 443
       type: udp
+    coturn:
+      port: 3478
+      type: both  # UDP and TCP
+    coturn_relay_min:
+      port: 49152
+      type: udp
+    coturn_relay_max:
+      port: 49252
+      type: udp
 
   internal: # localhost, tcp ports
     ocserv_personal: 447
@@ -39,14 +48,13 @@ reverse_proxy: # used by nginx
     nextcloud: 2345
     photoprism: 2342
     forgejo: 3000
-    snake: 8081
-    snake_webrtc: 8082
 
 email: "me@okhsunrog.dev" # for certbot
 
 domains:
   ocserv_personal: "open.okhsunrog.dev"
   ocserv_friends: "kafe.okhsunrog.dev"
+  coturn: "turn.okhsunrog.dev"
   nginx:
     blog:
       - "okhsunrog.ru"
@@ -61,10 +69,7 @@ domains:
       - "photoprism.okhsunrog.ru"
       - "photoprism.okhsunrog.dev"
     git:
-      - "git.okhsunrog.dev"
-    # snake:
-    #   - "serpentina.okhsunrog.ru"
-    #   - "snake.okhsunrog.dev"
+      - "fgj.okhsunrog.dev"
 
 ocserv_instances:
   - instance_id: "personal"

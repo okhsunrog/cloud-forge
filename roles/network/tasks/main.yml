@@ -58,7 +58,26 @@
     protocol: "{{ item.value.type }}"
     destination_port: "{{ item.value.port }}"
   loop: "{{ ports.external | dict2items }}"
-  when: item.value.type != 'icmp'
+  when: item.value.type != 'icmp' and item.value.type != 'both'
+  notify: save iptables
+
+- name: Configure firewall rules for ports that need both TCP and UDP
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    protocol: "{{ item[1] }}"
+    destination_port: "{{ item[0].value.port }}"
+  loop: "{{ ports.external | dict2items | product(['tcp', 'udp']) | list }}"
+  when: item[0].value.type == 'both'
+  notify: save iptables
+
+- name: Configure firewall rules for UDP port ranges
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    protocol: udp
+    destination_port: "{{ ports.external.coturn_relay_min.port }}:{{ ports.external.coturn_relay_max.port }}"
+  when: ports.external.coturn_relay_min is defined
   notify: save iptables
 
 - name: Allow ICMP (Ping)

@@ -1,0 +1,61 @@
+---
+- name: Install coturn
+  apt:
+    name: coturn
+    state: present
+    update_cache: yes
+
+- name: Create coturn log directory
+  file:
+    path: "{{ coturn_log_path }}"
+    state: directory
+    owner: turnserver
+    group: turnserver
+    mode: '0755'
+
+- name: Generate coturn configuration
+  template:
+    src: turnserver.conf.j2
+    dest: "{{ coturn_config_path }}"
+    owner: turnserver
+    group: turnserver
+    mode: '0600'
+  notify: restart coturn
+
+- name: Enable coturn in /etc/default/coturn
+  lineinfile:
+    path: /etc/default/coturn
+    regexp: '^#?TURNSERVER_ENABLED='
+    line: 'TURNSERVER_ENABLED=1'
+    create: yes
+  notify: restart coturn
+
+- name: Create ssl-cert group if it doesn't exist
+  group:
+    name: ssl-cert
+    state: present
+
+- name: Add turnserver user to ssl-cert group for certificate access
+  user:
+    name: turnserver
+    groups: ssl-cert
+    append: yes
+  notify: restart coturn
+
+- name: Set permissions on Let's Encrypt live directory
+  file:
+    path: /etc/letsencrypt/live
+    mode: '0755'
+    state: directory
+
+- name: Set permissions on Let's Encrypt archive directory
+  file:
+    path: /etc/letsencrypt/archive
+    mode: '0755'
+    state: directory
+
+- name: Enable and start coturn service
+  systemd:
+    name: coturn
+    enabled: yes
+    state: started

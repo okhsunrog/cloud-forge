@@ -10,7 +10,7 @@
       Components: main restricted universe multiverse
       Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
     create: yes
-  when: ansible_distribution == 'Ubuntu' and ansible_distribution_version == '24.04'
+  when: ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] == '24.04'
 
 - name: Install prerequisites for AmneziaWG
   apt:
@@ -18,7 +18,7 @@
       - software-properties-common
       - python3-launchpadlib
       - gnupg2
-      - linux-headers-{{ ansible_kernel }}
+      - linux-headers-{{ ansible_facts['kernel'] }}
       - build-essential
       - dkms
     state: present
@@ -32,12 +32,12 @@
 
 - name: Add AmneziaWG PPA repository
   apt_repository:
-    repo: "deb https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu {{ 'noble' if ansible_distribution_version == '24.04' else 'focal' }} main"
+    repo: "deb https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu {{ 'noble' if ansible_facts['distribution_version'] == '24.04' else 'focal' }} main"
     state: present
 
-- name: Add AmneziaWG PPA source repository  
+- name: Add AmneziaWG PPA source repository
   apt_repository:
-    repo: "deb-src https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu {{ 'noble' if ansible_distribution_version == '24.04' else 'focal' }} main"
+    repo: "deb-src https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu {{ 'noble' if ansible_facts['distribution_version'] == '24.04' else 'focal' }} main"
     state: present
 
 - name: Update apt cache and install AmneziaWG

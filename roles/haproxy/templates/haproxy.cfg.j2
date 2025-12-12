@@ -18,7 +18,7 @@ defaults
     timeout server  50000ms
 
 frontend sni_front
-    bind {{ ansible_default_ipv4.address }}:443
+    bind {{ ansible_facts['default_ipv4']['address'] }}:443
     mode tcp
     tcp-request inspect-delay 5s
     tcp-request content accept if { req_ssl_hello_type 1 }

@@ -1,0 +1,5 @@
+---
+- name: restart coturn
+  systemd:
+    name: coturn
+    state: restarted

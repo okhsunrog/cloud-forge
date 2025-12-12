@@ -14,7 +14,7 @@ ocserv_base_paths:
 
 # Default settings for all instances
 ocserv_default_settings:
-  udp_listen_host: "{{ ansible_default_ipv4.address }}"
+  udp_listen_host: "{{ ansible_facts['default_ipv4']['address'] }}"
   tcp_listen_host: "127.0.0.1"
   max_clients: 24
   max_same_clients: 5

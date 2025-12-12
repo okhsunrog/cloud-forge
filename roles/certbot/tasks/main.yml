@@ -16,12 +16,21 @@
     dest: /usr/bin/certbot
     state: link
 
-- name: Check if certificates exist and are up to date
+- name: Convert domains to proper list
+  set_fact:
+    domains_list: "{{ all_domains | from_yaml | flatten | unique | list }}"
+
+- name: Check which domains already have certificates
   shell: |
-    certbot certificates 2>/dev/null | grep "VALID:" | grep -v "EXPIRING SOON"
-  register: cert_status
+    certbot certificates -d {{ item }} 2>/dev/null | grep -q "Certificate Name: {{ item }}" && echo "exists" || echo "missing"
+  loop: "{{ domains_list }}"
+  register: cert_check
   changed_when: false
   failed_when: false
+
+- name: Build list of domains needing certificates
+  set_fact:
+    domains_needing_certs: "{{ cert_check.results | selectattr('stdout', 'search', 'missing') | map(attribute='item') | list }}"
 
 - name: Check if nginx is running
   service_facts:
@@ -31,29 +40,25 @@
   set_fact:
     nginx_running: "{{ 'nginx.service' in services_state.ansible_facts.services and services_state.ansible_facts.services['nginx.service'].state == 'running' }}"
 
-- name: Stop nginx if running
+- name: Stop nginx if running and certificates are needed
   systemd:
     name: nginx
     state: stopped
-  when: 
-    - cert_status.rc != 0
+  when:
+    - domains_needing_certs | length > 0
     - nginx_running
-  
-- name: Convert domains to proper list
-  set_fact:
-    domains_list: "{{ all_domains | from_yaml | flatten | unique | list }}"
 
-- name: Obtain certificates for each domain
+- name: Obtain certificates for domains that need them
   shell: >
-    certbot certonly --standalone --non-interactive --agree-tos -m {{ email }} 
+    certbot certonly --standalone --non-interactive --agree-tos -m {{ email }}
     -d {{ item }}
-  loop: "{{ domains_list }}"
-  when: cert_status.rc != 0
+  loop: "{{ domains_needing_certs }}"
+  when: domains_needing_certs | length > 0
 
 - name: Start nginx if it was running
   systemd:
     name: nginx
     state: started
-  when: 
-    - cert_status.rc != 0
+  when:
+    - domains_needing_certs | length > 0
     - nginx_running

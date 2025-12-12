@@ -7,15 +7,15 @@
   pre_tasks:
     - name: Check OS version
       debug:
-        msg: "Running on Ubuntu {{ ansible_distribution_version }}"
-      when: ansible_distribution == "Ubuntu" and ansible_distribution_version in ['22.04', '24.04']
+        msg: "Running on Ubuntu {{ ansible_facts['distribution_version'] }}"
+      when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_version'] in ['22.04', '24.04']
 
     - name: Verify Ubuntu 22.04 or higher
       fail:
         msg: "This playbook requires Ubuntu 22.04 (Jammy) or higher"
       when: >
-        ansible_distribution != "Ubuntu" or 
-        ansible_distribution_version not in ['22.04', '24.04']
+        ansible_facts['distribution'] != "Ubuntu" or
+        ansible_facts['distribution_version'] not in ['22.04', '24.04']
 
   roles:
     - base_system
@@ -25,6 +25,7 @@
     - haproxy
     - nginx
     - ocserv
+    - coturn
     - certbot_renewal_config
     - network
     - fail2ban

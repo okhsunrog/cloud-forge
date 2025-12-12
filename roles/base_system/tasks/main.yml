@@ -21,7 +21,7 @@
       deb http://mirrors.digitalocean.com/ubuntu/ jammy-backports main restricted universe multiverse
       deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse
     dest: /etc/apt/sources.list
-  when: ansible_distribution_version == "22.04"
+  when: ansible_facts['distribution_version'] == "22.04"
 
 - name: Configure Ubuntu 24.04 repositories
   copy:
@@ -31,7 +31,7 @@
       deb http://mirrors.digitalocean.com/ubuntu/ noble-backports main restricted universe multiverse
       deb http://security.ubuntu.com/ubuntu/ noble-security main restricted universe multiverse
     dest: /etc/apt/sources.list
-  when: ansible_distribution_version == "24.04"
+  when: ansible_facts['distribution_version'] == "24.04"
 
 - name: Update apt cache
   apt:
