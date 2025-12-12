@@ -57,8 +57,6 @@
 - name: Fix private key permissions for coturn
   shell: |
     find /etc/letsencrypt/archive/{{ coturn_realm }}/ -name 'privkey*.pem' -exec chgrp ssl-cert {} \; -exec chmod 640 {} \;
-  args:
-    warn: false
   changed_when: false
 
 - name: Enable and start coturn service

@@ -18,18 +18,30 @@
         ansible_facts['distribution_version'] not in ['22.04', '24.04']
 
   roles:
-    - base_system
-    - wireguard
-    - amneziawg
-    - certbot
-    - haproxy
-    - nginx
-    - blog_deploy
-    - ocserv
-    - coturn
-    - certbot_renewal_config
-    - network
-    - fail2ban
+    - role: base_system
+      tags: [base, system]
+    - role: wireguard
+      tags: [wireguard, vpn]
+    - role: amneziawg
+      tags: [amneziawg, vpn]
+    - role: certbot
+      tags: [certbot, certificates]
+    - role: haproxy
+      tags: [haproxy, proxy]
+    - role: nginx
+      tags: [nginx, proxy]
+    - role: blog_deploy
+      tags: [blog, deploy]
+    - role: ocserv
+      tags: [ocserv, vpn]
+    - role: coturn
+      tags: [coturn, turn]
+    - role: certbot_renewal_config
+      tags: [certbot, certificates]
+    - role: network
+      tags: [network, firewall]
+    - role: fail2ban
+      tags: [fail2ban, security]
 
   post_tasks:
     - name: Reboot server
@@ -39,3 +51,4 @@
         reboot_timeout: 300
         pre_reboot_delay: 0
         post_reboot_delay: 30
+      tags: [reboot, never]

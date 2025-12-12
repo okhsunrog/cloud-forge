@@ -1,8 +1,0 @@
----
-- name: Update AmneziaWG Users
-  hosts: vps
-  become: true
-  gather_facts: true
-
-  roles:
-    - amneziawg

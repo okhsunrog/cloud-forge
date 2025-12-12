@@ -16,6 +16,10 @@ ocserv_users:
     - username: "sneg"
       password: "5231"
 
+# WireGuard server keys (persist across rebuilds)
+wireguard_server_private_key: "server_private_key_generated_by_wg_genkey"
+wireguard_server_public_key: "server_public_key_generated_by_wg_pubkey"
+
 wireguard_peers:
   - name: "husky"
     private_key: "key"
@@ -39,4 +43,6 @@ amneziawg_peers:
     private_key: "private_key_generated_by_awg_genkey"
     public_key: "public_key_generated_by_awg_pubkey"
     ip: "10.65.65.10"
- 
+
+# Coturn TURN/STUN server secret (generate with: openssl rand -hex 32)
+coturn_static_secret: "your_generated_secret_here"

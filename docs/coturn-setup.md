@@ -14,17 +14,21 @@ Coturn provides TURN/STUN services required for Nextcloud Talk to work properly,
 The Coturn setup integrates with your existing infrastructure:
 
 - **Domain**: `turn.okhsunrog.dev`
-- **Listening Port**: `3478` (TCP/UDP) - STUN/TURN
-- **Relay Ports**: `49152-49252` (UDP) - 100 concurrent sessions
+- **Listening Ports**:
+  - `3478` (TCP/UDP) - STUN/TURN (unencrypted)
+  - `5349` (TCP/UDP) - TURNS (TLS-encrypted)
+- **Relay Ports**: `49152-49252` (UDP) - Unlimited concurrent sessions
 - **SSL/TLS**: Let's Encrypt certificates (auto-managed)
 - **Authentication**: Static auth secret (secure method for Nextcloud)
+
+Both TURN and TURNS protocols are enabled for maximum client compatibility as recommended by Nextcloud.
 
 ## Prerequisites
 
 Before deploying, ensure:
 
 1. ✅ DNS A record pointing `turn.okhsunrog.dev` to your VPS IP
-2. ✅ Ports `3478` (TCP/UDP) and `49152-49252` (UDP) allowed through any upstream firewalls
+2. ✅ Ports `3478` (TCP/UDP), `5349` (TCP/UDP), and `49152-49252` (UDP) allowed through any upstream firewalls
 3. ✅ Ansible vault password configured at `~/.vault_pass`
 
 ## Configuration Steps
@@ -105,6 +109,7 @@ You can test your TURN server using online tools:
 - https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/
   - Add STUN server: `stun:turn.okhsunrog.dev:3478`
   - Add TURN server: `turn:turn.okhsunrog.dev:3478`
+  - Add TURNS server: `turns:turn.okhsunrog.dev:5349`
   - Use your static secret for authentication
 
 ## Nextcloud Talk Configuration
@@ -116,17 +121,15 @@ You can test your TURN server using online tools:
 
 ### Configure TURN/STUN Servers
 
-Add the following configuration:
+**Important:** Enter only the domain (e.g., `turn.okhsunrog.dev`), without port number, `http://`, `turn://`, or `turns://` prefixes.
 
-#### STUN Server:
+#### TURN server URL:
 ```
-turn.okhsunrog.dev:3478
+turn.okhsunrog.dev
 ```
 
-#### TURN Server:
-```
-turn.okhsunrog.dev:3478
-```
+#### Protocol dropdown:
+Select **`turn: and turns:`** (this enables both protocols automatically)
 
 #### TURN Secret:
 ```
@@ -135,8 +138,9 @@ your-coturn-static-secret
 (Use the same secret from your vault)
 
 #### Protocols:
-- ✅ UDP
-- ✅ TCP
+- ✅ UDP and TCP
+
+**Note:** The combined "turn: and turns:" option automatically uses both port 3478 (unencrypted TURN) and port 5349 (TLS-encrypted TURNS) for maximum client compatibility. TURNS provides TLS encryption and works better through restrictive firewalls.
 
 ### Save Configuration
 
@@ -153,7 +157,10 @@ ports:
   external:
     coturn:
       port: 3478
-      type: both  # TCP and UDP
+      type: both  # TCP and UDP (TURN)
+    coturn_tls:
+      port: 5349
+      type: both  # TCP and UDP (TURNS)
     coturn_relay_min:
       port: 49152
       type: udp
@@ -170,32 +177,35 @@ domains:
 File: `roles/coturn/templates/turnserver.conf.j2`
 
 Key settings:
-- **Listening port**: 3478
+- **Listening ports**: 3478 (TURN), 5349 (TURNS)
 - **Realm**: turn.okhsunrog.dev
 - **SSL/TLS**: Let's Encrypt certificates
 - **Auth method**: Static auth secret
 - **Relay ports**: 49152-49252
-- **User quota**: 100 concurrent sessions
-- **Total quota**: 1000 concurrent sessions
+- **User quota**: 100 concurrent sessions per user
+- **Total quota**: 0 (unlimited)
+- **Bandwidth capacity**: 0 (unlimited)
 
 ## Troubleshooting
 
 ### Check if Coturn is listening
 
 ```bash
-ss -tulnp | grep 3478
+ss -tulnp | grep -E '(3478|5349)'
 ```
 
 Expected output:
 ```
 udp   UNCONN 0  0  0.0.0.0:3478  0.0.0.0:*  users:(("turnserver",pid=...))
 tcp   LISTEN 0  5  0.0.0.0:3478  0.0.0.0:*  users:(("turnserver",pid=...))
+udp   UNCONN 0  0  0.0.0.0:5349  0.0.0.0:*  users:(("turnserver",pid=...))
+tcp   LISTEN 0  5  0.0.0.0:5349  0.0.0.0:*  users:(("turnserver",pid=...))
 ```
 
 ### Check firewall rules
 
 ```bash
-iptables -L INPUT -n -v | grep 3478
+iptables -L INPUT -n -v | grep -E '(3478|5349)'
 ```
 
 ### Certificate issues

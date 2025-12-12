@@ -126,20 +126,130 @@ awg genkey | tee private.key | awg pubkey > public.key
 
 ### Full Deployment
 ```bash
-ansible-playbook site.yml --ask-vault-pass
+ansible-playbook site.yml
 ```
 
-### Update VPN Users Only
+Note: Vault password is configured in `ansible.cfg` to use `~/.vault_pass` file. If not using vault password file, add `--ask-vault-pass`.
+
+## Working with Tags
+
+Tags allow you to run specific parts of the playbook without deploying everything.
+
+### List Available Tags
 ```bash
-ansible-playbook update_vpn_users.yml --ask-vault-pass      # OpenConnect
-ansible-playbook update_amneziawg_users.yml --ask-vault-pass # AmneziaWG
+ansible-playbook site.yml --list-tags
 ```
 
-### Lint and Validation
+### Update Specific Services
+
+**VPN Services:**
 ```bash
-ansible-playbook --syntax-check site.yml
-ansible-playbook --check --diff site.yml
-ansible-lint site.yml
+ansible-playbook site.yml --tags ocserv        # OpenConnect VPN
+ansible-playbook site.yml --tags wireguard     # WireGuard VPN
+ansible-playbook site.yml --tags amneziawg     # AmneziaWG VPN
+ansible-playbook site.yml --tags vpn           # All VPN services
+```
+
+**Web Services:**
+```bash
+ansible-playbook site.yml --tags nginx         # Nginx reverse proxy
+ansible-playbook site.yml --tags haproxy       # HAProxy load balancer
+ansible-playbook site.yml --tags proxy         # Both nginx and haproxy
+```
+
+**TURN/STUN Server:**
+```bash
+ansible-playbook site.yml --tags coturn        # Coturn server
+ansible-playbook site.yml --tags coturn,network # Coturn + firewall rules
+```
+
+**Certificates:**
+```bash
+ansible-playbook site.yml --tags certificates  # SSL/TLS certificates
+ansible-playbook site.yml --tags certbot       # Just certbot
+```
+
+**Security:**
+```bash
+ansible-playbook site.yml --tags network       # Firewall rules
+ansible-playbook site.yml --tags fail2ban      # Intrusion prevention
+ansible-playbook site.yml --tags security      # fail2ban
+```
+
+**Other:**
+```bash
+ansible-playbook site.yml --tags base          # Base system config
+ansible-playbook site.yml --tags blog          # Blog deployment user
+```
+
+### Available Tags Reference
+
+| Tag | Roles/Tasks | Description |
+|-----|-------------|-------------|
+| `base`, `system` | base_system | Base system configuration |
+| `wireguard`, `vpn` | wireguard | WireGuard VPN |
+| `amneziawg`, `vpn` | amneziawg | AmneziaWG VPN |
+| `ocserv`, `vpn` | ocserv | OpenConnect VPN |
+| `coturn`, `turn` | coturn | TURN/STUN for WebRTC |
+| `certbot`, `certificates` | certbot, certbot_renewal_config | SSL certificates |
+| `haproxy`, `proxy` | haproxy | Load balancer |
+| `nginx`, `proxy` | nginx | Reverse proxy |
+| `blog`, `deploy` | blog_deploy | Blog deployment |
+| `network`, `firewall` | network | iptables firewall |
+| `fail2ban`, `security` | fail2ban | IPS |
+| `reboot`, `never` | post_tasks | Server reboot (never runs by default) |
+
+### Skip Specific Roles
+```bash
+ansible-playbook site.yml --skip-tags vpn
+ansible-playbook site.yml --skip-tags reboot
+```
+
+### Useful Ansible Commands
+
+**Dry run (check what would change):**
+```bash
+ansible-playbook site.yml --check
+ansible-playbook site.yml --tags nginx --check
+```
+
+**Verbose output:**
+```bash
+ansible-playbook site.yml -v     # verbose
+ansible-playbook site.yml -vvv   # very verbose
+```
+
+**List tasks:**
+```bash
+ansible-playbook site.yml --list-tasks
+ansible-playbook site.yml --tags nginx --list-tasks
+```
+
+**Check syntax:**
+```bash
+ansible-playbook site.yml --syntax-check
+```
+
+**Test connectivity:**
+```bash
+ansible vps -m ping
+```
+
+## Ansible Vault Management
+
+**Edit encrypted variables:**
+```bash
+ansible-vault edit group_vars/all/vault.yml
+```
+
+**View encrypted variables:**
+```bash
+ansible-vault view group_vars/all/vault.yml
+```
+
+**Change vault password:**
+```bash
+ansible-vault rekey group_vars/all/vault.yml
 ```
 
 ## File Structure
@@ -161,7 +271,7 @@ ansible-lint site.yml
 │   ├── certbot/               # Let's Encrypt certificates
 │   ├── network/               # Firewall and routing
 │   └── fail2ban/              # Intrusion prevention
-└── update_*.yml               # User management playbooks
+└── docs/                      # Documentation
 ```
 
 ## Client Configuration
@@ -186,10 +296,62 @@ scp root@server:/etc/amnezia/amneziawg/clients/client.conf ./
 
 ### Modifying SSL Domains
 1. Update `domains` section in `vars.yml`
-2. Run `ansible-playbook site.yml --tags certbot,nginx`
+2. Run `ansible-playbook site.yml --tags certificates,nginx`
 
 ### Network Isolation
 The configuration includes network isolation between VPN networks. Friends VPN network is blocked from accessing other VPN subnets by default.
+
+## Common Workflows
+
+### Add a New VPN User
+
+1. Edit the vault:
+   ```bash
+   ansible-vault edit group_vars/all/vault.yml
+   ```
+
+2. Add user to appropriate VPN section (wireguard_peers, ocserv_users, etc.)
+
+3. Update the VPN service:
+   ```bash
+   ansible-playbook site.yml --tags ocserv
+   # or
+   ansible-playbook site.yml --tags wireguard
+   ```
+
+### Add a New Domain
+
+1. Add DNS A record pointing to your VPS IP
+
+2. Edit `group_vars/all/vars.yml` and add the domain
+
+3. Deploy certificates and web configuration:
+   ```bash
+   ansible-playbook site.yml --tags certificates,nginx
+   ```
+
+### Update Coturn (TURN/STUN Server)
+
+1. Edit coturn variables in `group_vars/all/vars.yml` or vault
+
+2. Deploy changes:
+   ```bash
+   ansible-playbook site.yml --tags coturn,network
+   ```
+
+See [docs/coturn-setup.md](docs/coturn-setup.md) for complete Coturn setup guide.
+
+### Update Only Firewall Rules
+
+After changing port configuration:
+```bash
+ansible-playbook site.yml --tags network
+```
+
+## Documentation
+
+- [Coturn TURN/STUN Setup](docs/coturn-setup.md) - Complete guide for Nextcloud Talk WebRTC
+- [Documentation Index](docs/README.md) - All available documentation
 
 ## Troubleshooting
 

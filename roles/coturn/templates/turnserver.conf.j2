@@ -1,8 +1,8 @@
 # Coturn TURN/STUN server configuration for Nextcloud Talk
 # {{ ansible_managed }}
 
-# Listening port for STUN/TURN (disabled - using TURNS only)
-# listening-port=3478
+# Listening port for STUN/TURN (both TURN and TURNS recommended by Nextcloud)
+listening-port=3478
 
 # Listening IP (0.0.0.0 for all interfaces)
 listening-ip=0.0.0.0
@@ -58,11 +58,17 @@ fingerprint
 # No multicast peers
 no-multicast-peers
 
+# Prevent stale nonce attacks
+stale-nonce
+
 # User quota (max 100 concurrent sessions per user)
 user-quota=100
 
-# Total quota (max 1000 concurrent sessions)
-total-quota=1000
+# Total quota (0 = unlimited, recommended by Nextcloud)
+total-quota=0
+
+# Bandwidth capacity (0 = unlimited)
+bps-capacity=0
 
 # Disable CLI
 no-cli
