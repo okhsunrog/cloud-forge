@@ -1,21 +1,57 @@
 # Cloud-Forge
 
-Ansible-based infrastructure automation for deploying and managing a VPS with multiple VPN services and web proxies.
+Ansible-based infrastructure automation for deploying and managing a dual-VPS architecture with VPN services, reverse proxy, and blog hosting.
 
 ## Architecture
 
-The project deploys:
-- **VPN Services**: OpenConnect (ocserv) with multiple instances, WireGuard, AmneziaWG
-- **Web Infrastructure**: HAProxy load balancer, Nginx reverse proxy with SSL termination
-- **Security**: Fail2ban, automated Let's Encrypt certificates, iptables firewall rules
-- **Network Configuration**: NAT masquerading, port management, reverse proxy setup
+The project deploys a dual-VPS setup:
+
+```
+                      INTERNET
+                          |
+          +---------------+---------------+
+          |                               |
++-------------------+           +-------------------+
+|   Europe VPS      |           |    Moscow VPS     |
+|   okhsunrog.dev   |           |   okhsunrog.ru    |
++-------------------+           +-------------------+
+| wg-upstream (srv) |<--------->| wg-upstream (cli) |
+| 10.77.77.1        |   tunnel  | 10.77.77.2        |
++-------------------+           +-------------------+
+| Blog only (nginx) |           | wg-clients (srv)  |
+|                   |           | 10.66.66.1        |
++-------------------+           +-------------------+
+                                | OpenConnect x2    |
+                                | Coturn TURN/STUN  |
+                                +-------------------+
+                                        |
+                            +-----------+-----------+
+                            |                       |
+                      +----------+            +----------+
+                      | Clients  |            | Home Srv |
+                      | .10+     |            | .2       |
+                      +----------+            +----------+
+```
+
+**Moscow VPS (okhsunrog.ru)**:
+- Entry point for services
+- WireGuard server for clients
+- OpenConnect VPN (personal + friends instances)
+- Reverse proxy to home server
+- Coturn TURN/STUN server
+- All client traffic routes through Europe tunnel
+
+**Europe VPS (okhsunrog.dev)**:
+- VPN exit node (NAT for Moscow traffic)
+- Blog hosting only
+- WireGuard upstream server
 
 ## Requirements
 
-- Ubuntu 22.04 or 24.04 target server
+- Ubuntu 22.04 or 24.04 target servers
 - Ansible 2.9+
-- Root SSH access to target server
-- Domain names with DNS pointing to server IP
+- Root SSH access to target servers
+- Domain names with DNS pointing to server IPs
 
 ## Quick Start
 
@@ -25,161 +61,99 @@ git clone https://github.com/okhsunrog/cloud-forge.git
 cd cloud-forge
 ```
 
-2. Configure inventory:
-```bash
-cp inventory.yml.example inventory.yml
-# Edit inventory.yml with your server details
-```
-
-3. Configure variables:
+2. Configure variables:
 ```bash
 cp group_vars/all/vault.yml.example group_vars/all/vault.yml
-# Edit group_vars/all/vars.yml for domain and network configuration
-# Edit group_vars/all/vault.yml for credentials and user accounts
+# Edit group_vars/all/vault.yml with credentials and WireGuard keys
 ```
 
-4. Encrypt sensitive data:
+3. Encrypt sensitive data:
 ```bash
 ansible-vault encrypt group_vars/all/vault.yml
 ```
 
-5. Deploy infrastructure:
+4. Generate WireGuard keys:
 ```bash
-ansible-playbook site.yml --ask-vault-pass
-```
-
-## Configuration
-
-### Network Subnets
-Edit `group_vars/all/vars.yml`:
-```yaml
-vpn_subnets:
-  ocserv_personal: "10.67.76.0/24"
-  ocserv_friends: "10.68.68.0/24"
-  wireguard: "10.66.66.0/24"
-  amneziawg: "10.65.65.0/24"
-```
-
-### Port Configuration
-```yaml
-ports:
-  external:
-    wireguard:
-      port: 58889
-      type: udp
-    amneziawg:
-      port: 58888
-      type: udp
-```
-
-### VPN Users
-Add users to `group_vars/all/vault.yml`:
-
-**WireGuard peers:**
-```yaml
-wireguard_peers:
-  - name: "client1"
-    private_key: "generated_private_key"
-    public_key: "generated_public_key"
-    ip: "10.66.66.2"
-```
-
-**AmneziaWG peers:**
-```yaml
-amneziawg_peers:
-  - name: "client1"
-    private_key: "generated_private_key"
-    public_key: "generated_public_key"
-    ip: "10.65.65.2"
-```
-
-**OpenConnect users:**
-```yaml
-ocserv_users:
-  personal:
-    - username: "user1"
-      password: "password"
-```
-
-### Domains
-```yaml
-domains:
-  nginx:
-    blog:
-      - "example.com"
-      - "www.example.com"
-```
-
-## Key Generation
-
-**WireGuard:**
-```bash
+# For each interface (wg-clients, wg-upstream-moscow, wg-upstream-europe)
 wg genkey | tee private.key | wg pubkey > public.key
 ```
 
-**AmneziaWG:**
+5. Deploy infrastructure:
 ```bash
-awg genkey | tee private.key | awg pubkey > public.key
+# Deploy Europe first (upstream server must be running)
+ansible-playbook site-europe.yml
+
+# Then deploy Moscow (connects to Europe)
+ansible-playbook site-moscow.yml
 ```
+
+## Network Configuration
+
+### IP Address Reference
+
+| Subnet | Purpose | Location |
+|--------|---------|----------|
+| 10.66.66.0/24 | WireGuard clients | Moscow (.1 server, .2 home, .10+ devices) |
+| 10.77.77.0/24 | Moscow-Europe tunnel | .1 Europe, .2 Moscow |
+| 10.67.76.0/24 | ocserv personal | Moscow |
+| 10.68.68.0/24 | ocserv friends | Moscow |
+
+### Domain Distribution
+
+**Moscow VPS (.ru)** - Services:
+- `cloud.okhsunrog.ru` - Nextcloud (reverse proxy to home)
+- `jellyfin.okhsunrog.ru` - Jellyfin (reverse proxy to home)
+- `photoprism.okhsunrog.ru` - PhotoPrism (reverse proxy to home)
+- `git.okhsunrog.ru` - Forgejo (reverse proxy to home)
+- `turn.okhsunrog.ru` - Coturn TURN/STUN
+- `open.okhsunrog.ru` - ocserv personal
+- `kafe.okhsunrog.ru` - ocserv friends
+
+**Europe VPS (.dev)** - Blog only:
+- `okhsunrog.dev` - Blog
 
 ## Management Commands
 
 ### Full Deployment
+
 ```bash
-ansible-playbook site.yml
+# Europe VPS
+ansible-playbook site-europe.yml
+
+# Moscow VPS
+ansible-playbook site-moscow.yml
 ```
 
-Note: Vault password is configured in `ansible.cfg` to use `~/.vault_pass` file. If not using vault password file, add `--ask-vault-pass`.
+Note: Vault password is configured in `ansible.cfg` to use `~/.vault_pass` file.
 
-## Working with Tags
+### Working with Tags
 
-Tags allow you to run specific parts of the playbook without deploying everything.
+Tags allow you to run specific parts of the playbook.
 
-### List Available Tags
+**List available tags:**
 ```bash
-ansible-playbook site.yml --list-tags
+ansible-playbook site-moscow.yml --list-tags
 ```
 
-### Update Specific Services
-
-**VPN Services:**
+**Update specific services:**
 ```bash
-ansible-playbook site.yml --tags ocserv        # OpenConnect VPN
-ansible-playbook site.yml --tags wireguard     # WireGuard VPN
-ansible-playbook site.yml --tags amneziawg     # AmneziaWG VPN
-ansible-playbook site.yml --tags vpn           # All VPN services
-```
+# VPN Services (Moscow)
+ansible-playbook site-moscow.yml --tags wireguard
+ansible-playbook site-moscow.yml --tags ocserv
+ansible-playbook site-moscow.yml --tags vpn
 
-**Web Services:**
-```bash
-ansible-playbook site.yml --tags nginx         # Nginx reverse proxy
-ansible-playbook site.yml --tags haproxy       # HAProxy load balancer
-ansible-playbook site.yml --tags proxy         # Both nginx and haproxy
-```
+# Web Services
+ansible-playbook site-moscow.yml --tags nginx
+ansible-playbook site-moscow.yml --tags haproxy
 
-**TURN/STUN Server:**
-```bash
-ansible-playbook site.yml --tags coturn        # Coturn server
-ansible-playbook site.yml --tags coturn,network # Coturn + firewall rules
-```
+# TURN/STUN Server (Moscow)
+ansible-playbook site-moscow.yml --tags coturn
 
-**Certificates:**
-```bash
-ansible-playbook site.yml --tags certificates  # SSL/TLS certificates
-ansible-playbook site.yml --tags certbot       # Just certbot
-```
+# Certificates
+ansible-playbook site-europe.yml --tags certificates
 
-**Security:**
-```bash
-ansible-playbook site.yml --tags network       # Firewall rules
-ansible-playbook site.yml --tags fail2ban      # Intrusion prevention
-ansible-playbook site.yml --tags security      # fail2ban
-```
-
-**Other:**
-```bash
-ansible-playbook site.yml --tags base          # Base system config
-ansible-playbook site.yml --tags blog          # Blog deployment user
+# Network/Firewall
+ansible-playbook site-moscow.yml --tags network
 ```
 
 ### Available Tags Reference
@@ -188,185 +162,183 @@ ansible-playbook site.yml --tags blog          # Blog deployment user
 |-----|-------------|-------------|
 | `base`, `system` | base_system | Base system configuration |
 | `wireguard`, `vpn` | wireguard | WireGuard VPN |
-| `amneziawg`, `vpn` | amneziawg | AmneziaWG VPN |
-| `ocserv`, `vpn` | ocserv | OpenConnect VPN |
-| `coturn`, `turn` | coturn | TURN/STUN for WebRTC |
+| `ocserv`, `vpn` | ocserv | OpenConnect VPN (Moscow only) |
+| `coturn`, `turn` | coturn | TURN/STUN for WebRTC (Moscow only) |
 | `certbot`, `certificates` | certbot, certbot_renewal_config | SSL certificates |
 | `haproxy`, `proxy` | haproxy | Load balancer |
 | `nginx`, `proxy` | nginx | Reverse proxy |
-| `blog`, `deploy` | blog_deploy | Blog deployment |
+| `blog`, `deploy` | blog_deploy | Blog deployment (Europe only) |
 | `network`, `firewall` | network | iptables firewall |
 | `fail2ban`, `security` | fail2ban | IPS |
 | `reboot`, `never` | post_tasks | Server reboot (never runs by default) |
 
-### Skip Specific Roles
-```bash
-ansible-playbook site.yml --skip-tags vpn
-ansible-playbook site.yml --skip-tags reboot
-```
-
 ### Useful Ansible Commands
 
-**Dry run (check what would change):**
 ```bash
-ansible-playbook site.yml --check
-ansible-playbook site.yml --tags nginx --check
+# Dry run
+ansible-playbook site-moscow.yml --check
+
+# Verbose output
+ansible-playbook site-moscow.yml -v
+
+# List tasks
+ansible-playbook site-moscow.yml --list-tasks
+
+# Test connectivity
+ansible moscow -m ping
+ansible europe -m ping
 ```
 
-**Verbose output:**
-```bash
-ansible-playbook site.yml -v     # verbose
-ansible-playbook site.yml -vvv   # very verbose
+## Configuration
+
+### Vault Variables
+
+Edit `group_vars/all/vault.yml`:
+
+```yaml
+# Host credentials
+vault_moscow_ip: "x.x.x.x"
+vault_moscow_root_password: "..."
+vault_europe_ip: "y.y.y.y"
+vault_europe_root_password: "..."
+
+# WireGuard keys
+vault_wg_clients_private_key: "..."
+vault_wg_upstream_moscow_private_key: "..."
+vault_wg_upstream_europe_private_key: "..."
+vault_wg_upstream_europe_public_key: "..."
+
+# WireGuard peers
+vault_wg_clients_peers:
+  - name: "home-server"
+    private_key: "..."
+    public_key: "..."
+    ip: "10.66.66.2"
+
+vault_wg_upstream_europe_peers:
+  - name: "moscow"
+    public_key: "..."
+    ip: "10.77.77.2"
+    allowed_ips: "10.77.77.2/32,10.66.66.0/24,10.67.76.0/24,10.68.68.0/24"
+
+# OpenConnect users
+ocserv_users:
+  personal:
+    - username: "user1"
+      password: "password"
 ```
 
-**List tasks:**
-```bash
-ansible-playbook site.yml --list-tasks
-ansible-playbook site.yml --tags nginx --list-tasks
-```
+### Host-Specific Configuration
 
-**Check syntax:**
-```bash
-ansible-playbook site.yml --syntax-check
-```
-
-**Test connectivity:**
-```bash
-ansible vps -m ping
-```
-
-## Ansible Vault Management
-
-**Edit encrypted variables:**
-```bash
-ansible-vault edit group_vars/all/vault.yml
-```
-
-**View encrypted variables:**
-```bash
-ansible-vault view group_vars/all/vault.yml
-```
-
-**Change vault password:**
-```bash
-ansible-vault rekey group_vars/all/vault.yml
-```
+- `group_vars/moscow/vars.yml` - Moscow VPS configuration
+- `group_vars/europe/vars.yml` - Europe VPS configuration
 
 ## File Structure
 
 ```
-├── site.yml                    # Main playbook
+├── site-moscow.yml             # Moscow VPS playbook
+├── site-europe.yml             # Europe VPS playbook
 ├── inventory.yml               # Target hosts configuration
 ├── ansible.cfg                 # Ansible configuration
-├── group_vars/all/
-│   ├── vars.yml               # Plain variables
-│   └── vault.yml              # Encrypted credentials
+├── group_vars/
+│   ├── all/
+│   │   ├── vars.yml           # Shared variables
+│   │   └── vault.yml          # Encrypted credentials
+│   ├── moscow/
+│   │   └── vars.yml           # Moscow-specific vars
+│   └── europe/
+│       └── vars.yml           # Europe-specific vars
+├── generated_configs/
+│   └── home-server/           # Generated WG config for home server
 ├── roles/
 │   ├── base_system/           # Base system hardening
-│   ├── wireguard/             # WireGuard VPN
-│   ├── amneziawg/             # AmneziaWG VPN with DPI obfuscation
+│   ├── wireguard/             # WireGuard VPN (multi-interface)
 │   ├── ocserv/                # OpenConnect VPN server
 │   ├── nginx/                 # Reverse proxy with SSL
 │   ├── haproxy/               # Load balancer
 │   ├── certbot/               # Let's Encrypt certificates
+│   ├── coturn/                # TURN/STUN server
+│   ├── blog_deploy/           # Blog deployment
 │   ├── network/               # Firewall and routing
 │   └── fail2ban/              # Intrusion prevention
-└── docs/                      # Documentation
+└── docs/                       # Documentation
 ```
+
+## Deployment Order
+
+1. Generate WireGuard keys for all interfaces
+2. Deploy Europe VPS first (upstream server must be running)
+3. Deploy Moscow VPS (upstream client connects to Europe)
+4. Copy generated home server config from `generated_configs/home-server/`
+5. Test traffic routing: Moscow → Europe → Internet
 
 ## Client Configuration
 
 After deployment, client configurations are available at:
-- WireGuard: `/etc/wireguard/clients/`
-- AmneziaWG: `/etc/amnezia/amneziawg/clients/`
+- WireGuard (Moscow): `/etc/wireguard/wg-clients/clients/`
+- Home server config: `generated_configs/home-server/wg-client.conf`
 
-Download configurations:
+## Key Generation
+
 ```bash
-scp root@server:/etc/wireguard/clients/client.conf ./
-scp root@server:/etc/amnezia/amneziawg/clients/client.conf ./
+# WireGuard keys
+wg genkey | tee private.key | wg pubkey > public.key
+
+# Coturn secret
+openssl rand -hex 32
 ```
-
-## Customization
-
-### Adding New VPN Instance
-1. Add subnet to `vpn_subnets` in `vars.yml`
-2. Add port configuration to `ports.external`
-3. Update `roles/network/tasks/main.yml` firewall rules
-4. Create role or extend existing role configuration
-
-### Modifying SSL Domains
-1. Update `domains` section in `vars.yml`
-2. Run `ansible-playbook site.yml --tags certificates,nginx`
-
-### Network Isolation
-The configuration includes network isolation between VPN networks. Friends VPN network is blocked from accessing other VPN subnets by default.
 
 ## Common Workflows
 
-### Add a New VPN User
+### Add a New VPN Client (Moscow)
 
-1. Edit the vault:
-   ```bash
-   ansible-vault edit group_vars/all/vault.yml
-   ```
+1. Generate WireGuard keys
+2. Edit vault and add to `vault_wg_clients_peers`
+3. Run: `ansible-playbook site-moscow.yml --tags wireguard`
 
-2. Add user to appropriate VPN section (wireguard_peers, ocserv_users, etc.)
+### Add a New OpenConnect User
 
-3. Update the VPN service:
-   ```bash
-   ansible-playbook site.yml --tags ocserv
-   # or
-   ansible-playbook site.yml --tags wireguard
-   ```
+1. Edit vault and add to `ocserv_users`
+2. Run: `ansible-playbook site-moscow.yml --tags ocserv`
 
-### Add a New Domain
+### Update Blog (Europe)
 
-1. Add DNS A record pointing to your VPS IP
-
-2. Edit `group_vars/all/vars.yml` and add the domain
-
-3. Deploy certificates and web configuration:
-   ```bash
-   ansible-playbook site.yml --tags certificates,nginx
-   ```
-
-### Update Coturn (TURN/STUN Server)
-
-1. Edit coturn variables in `group_vars/all/vars.yml` or vault
-
-2. Deploy changes:
-   ```bash
-   ansible-playbook site.yml --tags coturn,network
-   ```
-
-See [docs/coturn-setup.md](docs/coturn-setup.md) for complete Coturn setup guide.
-
-### Update Only Firewall Rules
-
-After changing port configuration:
 ```bash
-ansible-playbook site.yml --tags network
+ansible-playbook site-europe.yml --tags blog
+```
+
+## Troubleshooting
+
+### Check WireGuard Tunnel
+
+```bash
+# On Moscow
+wg show wg0  # clients
+wg show wg1  # upstream to Europe
+
+# On Europe
+wg show wg0  # upstream server
+```
+
+### Certificate Renewal
+
+```bash
+systemctl status certbot-renewal.timer
+```
+
+### VPN Service Status
+
+```bash
+# Moscow
+systemctl status wg-quick@wg0
+systemctl status wg-quick@wg1
+systemctl status ocserv-personal
+systemctl status ocserv-friends
+
+# Europe
+systemctl status wg-quick@wg0
 ```
 
 ## Documentation
 
 - [Coturn TURN/STUN Setup](docs/coturn-setup.md) - Complete guide for Nextcloud Talk WebRTC
-- [Documentation Index](docs/README.md) - All available documentation
-
-## Troubleshooting
-
-### AmneziaWG DKMS Issues (Ubuntu 24.04)
-The playbook automatically fixes Ubuntu 24.04 DKMS compilation issues by adding required source repositories.
-
-### Certificate Renewal
-Certificates auto-renew via systemd timer. Check status:
-```bash
-systemctl status certbot-renewal.timer
-```
-
-### VPN Service Issues
-```bash
-systemctl status wg-quick@wg0           # WireGuard
-systemctl status awg-quick@awg0         # AmneziaWG  
-systemctl status ocserv-personal        # OpenConnect
-```

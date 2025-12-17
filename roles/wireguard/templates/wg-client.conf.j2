@@ -1,0 +1,20 @@
+[Interface]
+PrivateKey = {{ wg_iface.private_key }}
+Address = {{ wg_iface.address }}
+{% if wg_iface.dns is defined %}
+DNS = {{ wg_iface.dns }}
+{% endif %}
+{% if wg_iface.mtu is defined %}
+MTU = {{ wg_iface.mtu }}
+{% endif %}
+{% if wg_iface.table is defined %}
+Table = {{ wg_iface.table }}
+{% endif %}
+
+[Peer]
+PublicKey = {{ wg_iface.peer_public_key }}
+Endpoint = {{ wg_iface.endpoint }}
+AllowedIPs = {{ wg_iface.allowed_ips | default('0.0.0.0/0') }}
+{% if wg_iface.persistent_keepalive is defined %}
+PersistentKeepalive = {{ wg_iface.persistent_keepalive }}
+{% endif %}

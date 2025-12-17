@@ -1,48 +1,49 @@
 ---
-vault_vps_ip: 154.65.82.48
-vault_root_password: "pass1234"
+# ===================
+# WireGuard Keys
+# ===================
+
+# Moscow wg0 (clients server - serves NAS + devices)
+vault_wg_moscow_clients_private: "server_private_key"
+vault_wg_moscow_clients_public: "server_public_key"
+
+# Moscow wg1 (upstream client - connects to Europe)
+vault_wg_moscow_upstream_private: "moscow_upstream_private_key"
+vault_wg_moscow_upstream_public: "moscow_upstream_public_key"
+
+# Europe wg0 (upstream server - accepts Moscow)
+vault_wg_europe_upstream_private: "europe_upstream_private_key"
+vault_wg_europe_upstream_public: "europe_upstream_public_key"
+
+# ===================
+# WireGuard Peers
+# ===================
+
+# Clients that connect to Moscow wg0
+vault_wg_peers:
+  - name: "mira"
+    private: "peer_private_key"
+    public: "peer_public_key"
+    ip: "10.66.66.2"
+  - name: "husky"
+    private: "peer_private_key"
+    public: "peer_public_key"
+    ip: "10.66.66.5"
+
+# ===================
+# OpenConnect Users
+# ===================
 
 ocserv_users:
   personal:
-    - username: "nova"
-      password: "passw132"
-    - username: "orion"
-      password: "42wf"
-    - username: "husky"
-      password: "234lj"
+    - username: "user1"
+      password: "password1"
   friends:
-    - username: "allinli"
-      password: "test12345"
-    - username: "sneg"
-      password: "5231"
+    - username: "friend1"
+      password: "password1"
 
-# WireGuard server keys (persist across rebuilds)
-wireguard_server_private_key: "server_private_key_generated_by_wg_genkey"
-wireguard_server_public_key: "server_public_key_generated_by_wg_pubkey"
+# ===================
+# Coturn
+# ===================
 
-wireguard_peers:
-  - name: "husky"
-    private_key: "key"
-    public_key: "key"
-    ip: "10.26.66.5"
-  - name: "mira"
-    private_key: "key"
-    public_key: "key"
-    ip: "10.26.66.2"
-
-amneziawg_peers:
-  - name: "nova"
-    private_key: "private_key_generated_by_awg_genkey"
-    public_key: "public_key_generated_by_awg_pubkey"
-    ip: "10.65.65.2"
-  - name: "phantom"
-    private_key: "private_key_generated_by_awg_genkey"
-    public_key: "public_key_generated_by_awg_pubkey"
-    ip: "10.65.65.3"
-  - name: "mobile"
-    private_key: "private_key_generated_by_awg_genkey"
-    public_key: "public_key_generated_by_awg_pubkey"
-    ip: "10.65.65.10"
-
-# Coturn TURN/STUN server secret (generate with: openssl rand -hex 32)
-coturn_static_secret: "your_generated_secret_here"
+coturn_static_secret: "generate_with_openssl_rand_hex_32"

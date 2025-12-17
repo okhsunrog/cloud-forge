@@ -1,0 +1,62 @@
+---
+- name: Configure Moscow VPS
+  hosts: moscow
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Check OS version
+      debug:
+        msg: "Running on Ubuntu {{ ansible_facts['distribution_version'] }}"
+      when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_version'] in ['22.04', '24.04']
+
+    - name: Verify Ubuntu 22.04 or higher
+      fail:
+        msg: "This playbook requires Ubuntu 22.04 (Jammy) or higher"
+      when: >
+        ansible_facts['distribution'] != "Ubuntu" or
+        ansible_facts['distribution_version'] not in ['22.04', '24.04']
+
+  roles:
+    - role: base_system
+      tags: [base, system]
+    - role: wireguard
+      tags: [wireguard, vpn]
+    - role: certbot
+      tags: [certbot, certificates]
+    - role: haproxy
+      tags: [haproxy, proxy]
+    - role: nginx
+      tags: [nginx, proxy]
+    - role: ocserv
+      tags: [ocserv, vpn]
+    - role: coturn
+      tags: [coturn, turn]
+    - role: certbot_renewal_config
+      tags: [certbot, certificates]
+    - role: network
+      tags: [network, firewall]
+    - role: fail2ban
+      tags: [fail2ban, security]
+
+  post_tasks:
+    - name: Fetch all WireGuard client configs
+      fetch:
+        src: "/etc/wireguard/wg-clients/clients/{{ item.name }}.conf"
+        dest: "{{ playbook_dir }}/generated_configs/wireguard-clients/{{ item.name }}.conf"
+        flat: yes
+      loop: "{{ vault_wg_peers }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.private is defined or item.private_key is defined
+      no_log: true
+      tags: [fetch-configs, never]
+
+    - name: Reboot server
+      reboot:
+        msg: "Rebooting after setup"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+      tags: [reboot, never]

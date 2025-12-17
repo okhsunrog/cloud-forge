@@ -24,26 +24,36 @@ frontend sni_front
     tcp-request content accept if { req_ssl_hello_type 1 }
 
     # Routing based on SNI
-    {% for instance in ocserv_instances %}
+{% if ocserv_instances is defined %}
+{% for instance in ocserv_instances %}
     use_backend ocserv_{{ instance.instance_id }} if { req_ssl_sni -i {{ instance.domain }} }
-    {% endfor %}
+{% endfor %}
+{% endif %}
 
-    {% for service, domains in domains.nginx.items() %}
-    {% for domain in domains %}
+{% if domains.nginx is defined %}
+{% for service, service_domains in domains.nginx.items() %}
+{% for domain in service_domains %}
     use_backend nginx if { req_ssl_sni -i {{ domain }} }
-    {% endfor %}
-    {% endfor %}
+{% endfor %}
+{% endfor %}
+{% endif %}
 
+{% if ocserv_instances is defined %}
     default_backend ocserv_personal
+{% else %}
+    default_backend nginx
+{% endif %}
 
 # Backends
+{% if ocserv_instances is defined %}
 {% for instance in ocserv_instances %}
 backend ocserv_{{ instance.instance_id }}
     mode tcp
     option ssl-hello-chk
     server ocserv_{{ instance.instance_id }} 127.0.0.1:{{ instance.tcp_port }} send-proxy-v2
-{% endfor %}
 
+{% endfor %}
+{% endif %}
 
 backend nginx
     mode tcp

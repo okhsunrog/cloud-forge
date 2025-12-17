@@ -1,97 +1,17 @@
 ---
-vpn_subnets: # CIDR notation, these subnets will be added to iptables rules (masquerade)
+# Shared configuration for all hosts
+
+email: "me@okhsunrog.dev"  # for certbot
+
+# WireGuard network definitions (shared reference)
+wg_networks:
+  upstream: "10.77.77.0/24"      # Moscow-Europe tunnel
+  clients: "10.66.66.0/24"       # WireGuard clients (includes home server at .2)
   ocserv_personal: "10.67.76.0/24"
   ocserv_friends: "10.68.68.0/24"
-  wireguard: "10.66.66.0/24"
-  amneziawg: "10.65.65.0/24"
 
-# Network ports configuration, used by all playbooks
-ports:
-  external: # used by iptables
-    ssh:
-      port: 22
-      type: tcp
-    https:
-      port: 443
-      type: tcp
-    wireguard:
-      port: 58889
-      type: udp
-    amneziawg:
-      port: 58888
-      type: udp
-    http:
-      port: 80
-      type: tcp
-    ocserv_personal:
-      port: 443
-      type: udp
-    coturn:
-      port: 3478
-      type: both  # UDP and TCP (TURN)
-    coturn_tls:
-      port: 5349
-      type: both  # UDP and TCP (TURNS)
-    coturn_relay_min:
-      port: 49152
-      type: udp
-    coturn_relay_max:
-      port: 49252
-      type: udp
-
-  internal: # localhost, tcp ports
-    ocserv_personal: 447
-    ocserv_friends: 448
-    nginx_https: 8443
-
-reverse_proxy: # used by nginx
-  nas_ip: "10.66.66.2" # on wireguard
-  ports:
-    jellyfin: 8096
-    nextcloud: 2345
-    photoprism: 2342
-    forgejo: 3000
-
-email: "me@okhsunrog.dev" # for certbot
-
-domains:
-  ocserv_personal: "open.okhsunrog.dev"
-  ocserv_friends: "kafe.okhsunrog.dev"
-  coturn: "turn.okhsunrog.dev"
-  nginx:
-    blog:
-      - "okhsunrog.ru"
-      - "okhsunrog.dev"
-    jellyfin:
-      - "jellyfin.okhsunrog.ru"
-      - "jellyfin.okhsunrog.dev"
-    cloud:
-      - "cloud.okhsunrog.ru"
-      - "cloud.okhsunrog.dev"
-    photoprism:
-      - "photoprism.okhsunrog.ru"
-      - "photoprism.okhsunrog.dev"
-    git:
-      - "fgj.okhsunrog.dev"
-
-ocserv_instances:
-  - instance_id: "personal"
-    domain: "{{ domains['ocserv_personal'] }}"
-    ipv4_network: "{{ vpn_subnets['ocserv_personal'] }}"
-    udp_enabled: true
-    tcp_port: "{{ ports.internal['ocserv_personal'] }}"
-    udp_port: "{{ ports.external['ocserv_personal'].port }}"
-    device: "vpn0"
-    camouflage_secret: "mislinxxteal"
-    camouflage_realm: "Nginx Admin Portal"
-
-  - instance_id: "friends"
-    domain: "{{ domains['ocserv_friends'] }}"
-    ipv4_network: "{{ vpn_subnets['ocserv_friends'] }}"
-    tcp_port: "{{ ports.internal['ocserv_friends'] }}"
-    udp_enabled: false
-    device: "vpn1"
-    max_same_clients: 3
-    bandwidth: 65536000 # ~650MB/s
-    camouflage_secret: "mislinxxteal"
-    camouflage_realm: "Apache Admin Portal"
+# Sysctl settings (shared)
+sysctl_settings:
+  net.ipv4.ip_forward: 1
+  net.core.default_qdisc: fq
+  net.ipv4.tcp_congestion_control: bbr

@@ -1,0 +1,73 @@
+---
+# Setup a single WireGuard interface (called in loop from main.yml)
+# Variables come from wg_iface loop variable
+
+- name: "{{ wg_iface.name }} - Create keys directory"
+  file:
+    path: "/etc/wireguard/{{ wg_iface.name }}"
+    state: directory
+    mode: '0700'
+
+- name: "{{ wg_iface.name }} - Write private key from vault"
+  copy:
+    content: "{{ wg_iface.private_key }}"
+    dest: "/etc/wireguard/{{ wg_iface.name }}/private.key"
+    mode: '0600'
+  no_log: true
+
+- name: "{{ wg_iface.name }} - Generate public key"
+  shell: echo "{{ wg_iface.private_key }}" | wg pubkey
+  register: wg_pubkey_result
+  changed_when: false
+  no_log: true
+
+- name: "{{ wg_iface.name }} - Write public key"
+  copy:
+    content: "{{ wg_pubkey_result.stdout }}"
+    dest: "/etc/wireguard/{{ wg_iface.name }}/public.key"
+    mode: '0644'
+
+- name: "{{ wg_iface.name }} - Generate server config"
+  template:
+    src: wg-server.conf.j2
+    dest: "/etc/wireguard/{{ wg_iface.interface }}.conf"
+    mode: '0600'
+  when: wg_iface.role == 'server'
+  notify: "restart wireguard {{ wg_iface.interface }}"
+  no_log: true
+
+- name: "{{ wg_iface.name }} - Generate client config"
+  template:
+    src: wg-client.conf.j2
+    dest: "/etc/wireguard/{{ wg_iface.interface }}.conf"
+    mode: '0600'
+  when: wg_iface.role == 'client'
+  notify: "restart wireguard {{ wg_iface.interface }}"
+  no_log: true
+
+- name: "{{ wg_iface.name }} - Create client configs directory"
+  file:
+    path: "/etc/wireguard/{{ wg_iface.name }}/clients"
+    state: directory
+    mode: '0700'
+  when: wg_iface.role == 'server' and wg_iface.peers is defined
+
+- name: "{{ wg_iface.name }} - Generate peer client configs"
+  template:
+    src: peer-client.conf.j2
+    dest: "/etc/wireguard/{{ wg_iface.name }}/clients/{{ peer.name }}.conf"
+    mode: '0600'
+  loop: "{{ wg_iface.peers | default([]) }}"
+  loop_control:
+    loop_var: peer
+  when:
+    - wg_iface.role == 'server'
+    - wg_iface.peers is defined
+    - peer.private is defined or peer.private_key is defined
+  no_log: true
+
+- name: "{{ wg_iface.name }} - Enable and start wireguard"
+  systemd:
+    name: "wg-quick@{{ wg_iface.interface }}"
+    enabled: yes
+    state: started

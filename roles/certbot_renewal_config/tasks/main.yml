@@ -6,9 +6,9 @@
 
 - name: Debug services
   debug:
-    msg: 
+    msg:
       - "Running ocserv services: {{ running_ocserv.stdout_lines }}"
-      - "Deployed ocserv services: {{ ocserv_deployed_services }}"
+      - "Deployed ocserv services: {{ ocserv_deployed_services | default([]) }}"
 
 - name: Create updated certbot renewal service
   template:

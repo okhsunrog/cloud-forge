@@ -1,54 +1,26 @@
 ---
-- name: Configure VPS
-  hosts: vps
-  become: true
-  gather_facts: true
+# DEPRECATED: Use site-moscow.yml or site-europe.yml instead
+#
+# This playbook is kept for reference but the infrastructure now uses
+# separate playbooks for each VPS:
+#   - site-moscow.yml: Moscow VPS (okhsunrog.ru) - VPN services, reverse proxy
+#   - site-europe.yml: Europe VPS (okhsunrog.dev) - Blog, VPN exit node
+#
+# To deploy:
+#   ansible-playbook site-moscow.yml
+#   ansible-playbook site-europe.yml
 
-  pre_tasks:
-    - name: Check OS version
+- name: Legacy playbook - use site-moscow.yml or site-europe.yml
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Show deprecation notice
       debug:
-        msg: "Running on Ubuntu {{ ansible_facts['distribution_version'] }}"
-      when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_version'] in ['22.04', '24.04']
+        msg: |
+          This playbook is deprecated. Please use:
+            - site-moscow.yml for Moscow VPS
+            - site-europe.yml for Europe VPS
 
-    - name: Verify Ubuntu 22.04 or higher
+    - name: Fail with instructions
       fail:
-        msg: "This playbook requires Ubuntu 22.04 (Jammy) or higher"
-      when: >
-        ansible_facts['distribution'] != "Ubuntu" or
-        ansible_facts['distribution_version'] not in ['22.04', '24.04']
-
-  roles:
-    - role: base_system
-      tags: [base, system]
-    - role: wireguard
-      tags: [wireguard, vpn]
-    - role: amneziawg
-      tags: [amneziawg, vpn]
-    - role: certbot
-      tags: [certbot, certificates]
-    - role: haproxy
-      tags: [haproxy, proxy]
-    - role: nginx
-      tags: [nginx, proxy]
-    - role: blog_deploy
-      tags: [blog, deploy]
-    - role: ocserv
-      tags: [ocserv, vpn]
-    - role: coturn
-      tags: [coturn, turn]
-    - role: certbot_renewal_config
-      tags: [certbot, certificates]
-    - role: network
-      tags: [network, firewall]
-    - role: fail2ban
-      tags: [fail2ban, security]
-
-  post_tasks:
-    - name: Reboot server
-      reboot:
-        msg: "Rebooting after setup"
-        connect_timeout: 5
-        reboot_timeout: 300
-        pre_reboot_delay: 0
-        post_reboot_delay: 30
-      tags: [reboot, never]
+        msg: "Use site-moscow.yml or site-europe.yml instead"

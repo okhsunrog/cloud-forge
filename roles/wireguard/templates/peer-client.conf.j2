@@ -1,0 +1,11 @@
+[Interface]
+PrivateKey = {{ peer.private | default(peer.private_key) }}
+Address = {{ peer.ip }}/32
+DNS = 94.140.14.14, 94.140.15.15
+MTU = 1420
+
+[Peer]
+PublicKey = {{ wg_pubkey_result.stdout }}
+Endpoint = {{ wg_iface.endpoint_domain | default(ansible_facts['default_ipv4']['address']) }}:{{ wg_iface.port }}
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25

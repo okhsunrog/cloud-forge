@@ -1,0 +1,59 @@
+---
+# Europe VPS Configuration (okhsunrog.dev)
+# VPN exit node, blog hosting only
+
+# VPN subnets for NAT (traffic from Moscow clients)
+vpn_subnets:
+  wireguard_clients: "{{ wg_networks.clients }}"
+  ocserv_personal: "{{ wg_networks.ocserv_personal }}"
+  ocserv_friends: "{{ wg_networks.ocserv_friends }}"
+  upstream: "{{ wg_networks.upstream }}"
+
+# No tunnel routing on Europe (it IS the exit node)
+route_through_tunnel: false
+
+# Network ports configuration
+ports:
+  external:
+    ssh:
+      port: 22
+      type: tcp
+    https:
+      port: 443
+      type: tcp
+    http:
+      port: 80
+      type: tcp
+    wireguard_upstream:
+      port: 58886
+      type: udp
+
+  internal:
+    nginx_https: 8443
+
+# WireGuard interfaces (single - upstream server)
+wireguard_interfaces:
+  - name: "wg-upstream"
+    interface: "wg0"
+    role: "server"
+    address: "10.77.77.1/24"
+    port: 58886
+    private_key: "{{ vault_wg_europe_upstream_private }}"
+    peers:
+      - name: "moscow"
+        public_key: "{{ vault_wg_moscow_upstream_public }}"
+        ip: "10.77.77.2"
+        allowed_ips: "10.77.77.2/32,{{ wg_networks.clients }},{{ wg_networks.ocserv_personal }},{{ wg_networks.ocserv_friends }}"
+
+# Domains for Europe VPS (.dev only, blog)
+domains:
+  nginx:
+    blog:
+      - "okhsunrog.dev"
+
+# No reverse proxy needed (blog is local)
+# No ocserv instances (moved to Moscow)
+# No coturn (on Moscow)
+
+# Blog deployment
+blog_deploy_enabled: true

@@ -1,5 +1,0 @@
----
-- name: restart amneziawg
-  systemd:
-    name: "awg-quick@{{ amneziawg_interface }}"
-    state: restarted

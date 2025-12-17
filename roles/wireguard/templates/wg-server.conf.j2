@@ -1,0 +1,18 @@
+[Interface]
+PrivateKey = {{ wg_iface.private_key }}
+ListenPort = {{ wg_iface.port }}
+Address = {{ wg_iface.address }}
+
+{% for peer in wg_iface.peers | default([]) %}
+[Peer]
+# {{ peer.name }}
+PublicKey = {{ peer.public | default(peer.public_key) }}
+AllowedIPs = {{ peer.allowed_ips | default(peer.ip ~ '/32') }}
+{% if peer.endpoint is defined %}
+Endpoint = {{ peer.endpoint }}
+{% endif %}
+{% if peer.persistent_keepalive is defined %}
+PersistentKeepalive = {{ peer.persistent_keepalive }}
+{% endif %}
+
+{% endfor %}

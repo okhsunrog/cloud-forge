@@ -1,5 +1,10 @@
 ---
-- name: restart wireguard
+- name: restart wireguard wg0
   systemd:
-    name: "wg-quick@{{ wireguard_interface }}"
+    name: "wg-quick@wg0"
+    state: restarted
+
+- name: restart wireguard wg1
+  systemd:
+    name: "wg-quick@wg1"
     state: restarted

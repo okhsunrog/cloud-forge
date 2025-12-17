@@ -1,0 +1,23 @@
+[Unit]
+Description=Setup policy routing for VPN tunnel
+After=network-online.target wg-quick@{{ tunnel_interface }}.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c '\
+    ip route add default via {{ tunnel_gateway }} dev {{ tunnel_interface }} table tunnel; \
+{% for subnet_name, subnet_cidr in vpn_subnets.items() %}
+    ip rule add from {{ subnet_cidr }} lookup tunnel priority 100; \
+{% endfor %}
+    echo "Tunnel routing configured"'
+ExecStop=/bin/bash -c '\
+{% for subnet_name, subnet_cidr in vpn_subnets.items() %}
+    ip rule del from {{ subnet_cidr }} lookup tunnel priority 100 || true; \
+{% endfor %}
+    ip route del default via {{ tunnel_gateway }} dev {{ tunnel_interface }} table tunnel || true; \
+    echo "Tunnel routing removed"'
+
+[Install]
+WantedBy=multi-user.target

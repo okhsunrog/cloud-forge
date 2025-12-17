@@ -5,3 +5,6 @@
 - name: save iptables
   command: netfilter-persistent save
 
+- name: reload systemd
+  systemd:
+    daemon_reload: yes

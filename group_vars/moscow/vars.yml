@@ -1,0 +1,125 @@
+---
+# Moscow VPS Configuration (okhsunrog.ru)
+# Entry point for services, reverse proxy to home server
+
+# Network interface for NAT (different from default eth0)
+nat_out_interface: "ens3"
+
+# VPN subnets for NAT masquerading (traffic goes through Europe tunnel)
+vpn_subnets:
+  wireguard: "{{ wg_networks.clients }}"
+  ocserv_personal: "{{ wg_networks.ocserv_personal }}"
+  ocserv_friends: "{{ wg_networks.ocserv_friends }}"
+
+# Enable tunnel routing (all VPN traffic exits via Europe)
+route_through_tunnel: true
+tunnel_interface: "wg1"  # wg-upstream interface
+tunnel_gateway: "10.77.77.1"  # Europe VPS
+
+# Network ports configuration
+ports:
+  external:
+    ssh:
+      port: 22
+      type: tcp
+    https:
+      port: 443
+      type: tcp
+    http:
+      port: 80
+      type: tcp
+    wireguard:
+      port: 58889
+      type: udp
+    ocserv_personal:
+      port: 443
+      type: udp
+    coturn:
+      port: 3478
+      type: both
+    coturn_tls:
+      port: 5349
+      type: both
+    coturn_relay_min:
+      port: 49152
+      type: udp
+    coturn_relay_max:
+      port: 49252
+      type: udp
+
+  internal:
+    ocserv_personal: 447
+    ocserv_friends: 448
+    nginx_https: 8443
+
+# WireGuard interfaces (multiple)
+wireguard_interfaces:
+  - name: "wg-clients"
+    interface: "wg0"
+    role: "server"
+    address: "10.66.66.1/24"
+    port: 58889
+    endpoint_domain: "okhsunrog.ru"  # Used in client configs
+    private_key: "{{ vault_wg_moscow_clients_private }}"
+    peers: "{{ vault_wg_peers }}"
+
+  - name: "wg-upstream"
+    interface: "wg1"
+    role: "client"
+    address: "10.77.77.2/24"
+    private_key: "{{ vault_wg_moscow_upstream_private }}"
+    endpoint: "okhsunrog.dev:58886"
+    peer_public_key: "{{ vault_wg_europe_upstream_public }}"
+    # Only allow tunnel subnet - policy routing handles VPN traffic
+    allowed_ips: "10.77.77.0/24"
+    persistent_keepalive: 25
+
+# Reverse proxy configuration (to home server via WireGuard)
+reverse_proxy:
+  nas_ip: "10.66.66.2"  # Home server on wg-clients
+  ports:
+    jellyfin: 8096
+    nextcloud: 2345
+    photoprism: 2342
+    forgejo: 3000
+
+# Domains for Moscow VPS (.ru only, services proxied to home)
+domains:
+  ocserv_personal: "open.okhsunrog.ru"
+  ocserv_friends: "kafe.okhsunrog.ru"
+  coturn: "turn.okhsunrog.ru"
+  nginx:
+    jellyfin:
+      - "jellyfin.okhsunrog.ru"
+    cloud:
+      - "cloud.okhsunrog.ru"
+    photoprism:
+      - "photoprism.okhsunrog.ru"
+    git:
+      - "fgj.okhsunrog.ru"
+
+# OpenConnect instances (both on Moscow)
+ocserv_instances:
+  - instance_id: "personal"
+    domain: "{{ domains['ocserv_personal'] }}"
+    ipv4_network: "{{ wg_networks['ocserv_personal'] }}"
+    udp_enabled: true
+    tcp_port: "{{ ports.internal['ocserv_personal'] }}"
+    udp_port: "{{ ports.external['ocserv_personal'].port }}"
+    device: "vpn0"
+    camouflage_secret: "mislinxxteal"
+    camouflage_realm: "Nginx Admin Portal"
+
+  - instance_id: "friends"
+    domain: "{{ domains['ocserv_friends'] }}"
+    ipv4_network: "{{ wg_networks['ocserv_friends'] }}"
+    tcp_port: "{{ ports.internal['ocserv_friends'] }}"
+    udp_enabled: false
+    device: "vpn1"
+    max_same_clients: 3
+    bandwidth: 65536000
+    camouflage_secret: "mislinxxteal"
+    camouflage_realm: "Apache Admin Portal"
+
+# Coturn configuration
+coturn_domain: "{{ domains.coturn }}"

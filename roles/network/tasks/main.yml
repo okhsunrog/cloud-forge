@@ -23,33 +23,62 @@
     name: iptables-persistent
     state: present
 
+# NAT rules for VPN subnets
 - name: Configure NAT rules
   iptables:
     table: nat
     chain: POSTROUTING
     jump: MASQUERADE
     source: "{{ item.value }}"
-    out_interface: eth0
+    out_interface: "{{ nat_out_interface | default('eth0') }}"
   with_dict: "{{ vpn_subnets }}"
+  when: vpn_subnets is defined
+  notify: save iptables
 
+# Block internal traffic in friends VPN network (Moscow only)
 - name: Block internal traffic in friends VPN network
   iptables:
     chain: FORWARD
-    source: "{{ vpn_subnets.ocserv_friends }}"
+    source: "{{ wg_networks.ocserv_friends }}"
     destination: "{{ item }}"
     jump: DROP
   loop:
-    - "{{ vpn_subnets.ocserv_friends }}"
-    - "{{ vpn_subnets.ocserv_personal }}"
-    - "{{ vpn_subnets.wireguard }}"
-    - "{{ vpn_subnets.amneziawg }}"
-  when: vpn_subnets.ocserv_friends is defined
+    - "{{ wg_networks.ocserv_friends }}"
+    - "{{ wg_networks.ocserv_personal }}"
+    - "{{ wg_networks.clients }}"
+  when: wg_networks.ocserv_friends is defined and ocserv_instances is defined
+  notify: save iptables
 
+# Policy routing for tunnel (Moscow VPS)
+- name: Create routing table for tunnel
+  lineinfile:
+    path: /etc/iproute2/rt_tables
+    line: "100 tunnel"
+    state: present
+  when: route_through_tunnel | default(false)
+
+- name: Setup tunnel routing service
+  template:
+    src: tunnel-routing.service.j2
+    dest: /etc/systemd/system/tunnel-routing.service
+    mode: '0644'
+  when: route_through_tunnel | default(false)
+  notify: reload systemd
+
+- name: Enable tunnel routing service
+  systemd:
+    name: tunnel-routing
+    enabled: yes
+    daemon_reload: yes
+  when: route_through_tunnel | default(false)
+
+# Standard firewall rules
 - name: Allow established connections
   iptables:
     chain: INPUT
     jump: ACCEPT
     ctstate: ESTABLISHED,RELATED
+  notify: save iptables
 
 - name: Configure firewall rules for external ports
   iptables:
@@ -58,7 +87,10 @@
     protocol: "{{ item.value.type }}"
     destination_port: "{{ item.value.port }}"
   loop: "{{ ports.external | dict2items }}"
-  when: item.value.type != 'icmp' and item.value.type != 'both'
+  when:
+    - ports.external is defined
+    - item.value.type != 'icmp'
+    - item.value.type != 'both'
   notify: save iptables
 
 - name: Configure firewall rules for ports that need both TCP and UDP
@@ -68,7 +100,9 @@
     protocol: "{{ item[1] }}"
     destination_port: "{{ item[0].value.port }}"
   loop: "{{ ports.external | dict2items | product(['tcp', 'udp']) | list }}"
-  when: item[0].value.type == 'both'
+  when:
+    - ports.external is defined
+    - item[0].value.type == 'both'
   notify: save iptables
 
 - name: Configure firewall rules for UDP port ranges
