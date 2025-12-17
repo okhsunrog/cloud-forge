@@ -45,11 +45,12 @@ wireguard_interfaces:
         ip: "10.77.77.2"
         allowed_ips: "10.77.77.2/32,{{ wg_networks.clients }},{{ wg_networks.ocserv_personal }},{{ wg_networks.ocserv_friends }}"
 
-# Domains for Europe VPS (.dev only, blog)
+# Domains for Europe VPS (blog on both TLDs)
 domains:
   nginx:
     blog:
       - "okhsunrog.dev"
+      - "okhsunrog.ru"
 
 # No reverse proxy needed (blog is local)
 # No ocserv instances (moved to Moscow)

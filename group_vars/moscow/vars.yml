@@ -59,7 +59,7 @@ wireguard_interfaces:
     role: "server"
     address: "10.66.66.1/24"
     port: 58889
-    endpoint_domain: "okhsunrog.ru"  # Used in client configs
+    endpoint_domain: "msk.okhsunrog.ru"  # Used in client configs
     private_key: "{{ vault_wg_moscow_clients_private }}"
     peers: "{{ vault_wg_peers }}"
 
@@ -84,7 +84,9 @@ reverse_proxy:
     photoprism: 2342
     forgejo: 3000
 
-# Domains for Moscow VPS (.ru only, services proxied to home)
+# Domains for Moscow VPS (services proxied to home)
+# User-facing services get both .ru and .dev
+# Technical services (VPN, TURN) only need .ru
 domains:
   ocserv_personal: "open.okhsunrog.ru"
   ocserv_friends: "kafe.okhsunrog.ru"
@@ -92,12 +94,16 @@ domains:
   nginx:
     jellyfin:
       - "jellyfin.okhsunrog.ru"
+      - "jellyfin.okhsunrog.dev"
     cloud:
       - "cloud.okhsunrog.ru"
+      - "cloud.okhsunrog.dev"
     photoprism:
       - "photoprism.okhsunrog.ru"
+      - "photoprism.okhsunrog.dev"
     git:
       - "fgj.okhsunrog.ru"
+      - "fgj.okhsunrog.dev"
 
 # OpenConnect instances (both on Moscow)
 ocserv_instances:

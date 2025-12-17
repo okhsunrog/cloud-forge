@@ -4,7 +4,7 @@ all:
     moscow:
       hosts:
         moscow:
-          ansible_host: "okhsunrog.ru"
+          ansible_host: "msk.okhsunrog.ru"
           ansible_user: ubuntu
           ansible_become: true
 
