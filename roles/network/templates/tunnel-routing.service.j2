@@ -9,6 +9,7 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=/bin/bash -c '\
     ip route add default via {{ tunnel_gateway }} dev {{ tunnel_interface }} table tunnel; \
+    ip route add {{ wg_networks.clients }} dev wg0 table tunnel; \
 {% for subnet_name, subnet_cidr in vpn_subnets.items() %}
     ip rule add from {{ subnet_cidr }} lookup tunnel priority 100; \
 {% endfor %}
@@ -17,6 +18,7 @@ ExecStop=/bin/bash -c '\
 {% for subnet_name, subnet_cidr in vpn_subnets.items() %}
     ip rule del from {{ subnet_cidr }} lookup tunnel priority 100 || true; \
 {% endfor %}
+    ip route del {{ wg_networks.clients }} dev wg0 table tunnel || true; \
     ip route del default via {{ tunnel_gateway }} dev {{ tunnel_interface }} table tunnel || true; \
     echo "Tunnel routing removed"'
 

@@ -129,6 +129,15 @@
     in_interface: lo
   notify: save iptables
 
+- name: Allow traffic from WireGuard interfaces
+  iptables:
+    chain: INPUT
+    jump: ACCEPT
+    in_interface: "{{ item.interface }}"
+  loop: "{{ wireguard_interfaces | default([]) }}"
+  when: wireguard_interfaces is defined
+  notify: save iptables
+
 - name: Set default policies
   iptables:
     chain: "{{ item.chain }}"
