@@ -70,8 +70,9 @@ wireguard_interfaces:
     private_key: "{{ vault_wg_moscow_upstream_private }}"
     endpoint: "okhsunrog.dev:58886"
     peer_public_key: "{{ vault_wg_europe_upstream_public }}"
-    # Only allow tunnel subnet - policy routing handles VPN traffic
-    allowed_ips: "10.77.77.0/24"
+    # Allow all traffic through tunnel, policy routing decides what goes here
+    allowed_ips: "0.0.0.0/0"
+    table: "off"
     persistent_keepalive: 25
 
 # Reverse proxy configuration (to home server via WireGuard)

@@ -1,6 +1,7 @@
 [Unit]
 Description=Setup policy routing for VPN tunnel
 After=network-online.target wg-quick@{{ tunnel_interface }}.service
+Requires=wg-quick@{{ tunnel_interface }}.service
 Wants=network-online.target
 
 [Service]
