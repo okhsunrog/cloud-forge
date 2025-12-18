@@ -2,8 +2,6 @@
 amneziawg_interface: "awg0"
 amneziawg_address: "10.65.65.1/24"
 amneziawg_port: 58888
-amneziawg_private_key_path: "/etc/amnezia/amneziawg/private.key"
-amneziawg_public_key_path: "/etc/amnezia/amneziawg/public.key"
 amneziawg_config_path: "/etc/amnezia/amneziawg"
 amneziawg_clients_dir: "/etc/amnezia/amneziawg/clients"
 

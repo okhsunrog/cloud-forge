@@ -1,5 +1,5 @@
 [Interface]
-PrivateKey = {{ amneziawg_private_key.content | b64decode | trim }}
+PrivateKey = {{ vault_wg_moscow_clients_private }}
 Address = {{ amneziawg_address }}
 ListenPort = {{ amneziawg_port }}
 
@@ -14,11 +14,9 @@ H2 = {{ amneziawg_obfuscation.h2 }}
 H3 = {{ amneziawg_obfuscation.h3 }}
 H4 = {{ amneziawg_obfuscation.h4 }}
 
-{% if amneziawg_peers is defined %}
-{% for peer in amneziawg_peers %}
+{% for peer in vault_wg_peers %}
 [Peer]
-PublicKey = {{ peer.public_key }}
-AllowedIPs = {{ peer.ip }}/32
+PublicKey = {{ peer.public }}
+AllowedIPs = {{ peer.ip | regex_replace('^10\.66\.66\.', '10.65.65.') }}/32
 
 {% endfor %}
-{% endif %}

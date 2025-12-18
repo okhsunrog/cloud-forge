@@ -136,5 +136,5 @@ ocserv_instances:
 coturn_domain: "{{ domains.coturn }}"
 
 # AmneziaWG configuration (DPI bypass VPN)
+# Uses same keys as WireGuard (vault_wg_peers), IPs auto-mapped to 10.65.65.X
 amneziawg_endpoint_domain: "msk.okhsunrog.ru"
-amneziawg_peers: "{{ vault_amneziawg_peers | default([]) }}"

@@ -59,10 +59,9 @@
         src: "/etc/amnezia/amneziawg/clients/{{ item.name }}.conf"
         dest: "{{ playbook_dir }}/generated_configs/amneziawg-clients/{{ item.name }}.conf"
         flat: yes
-      loop: "{{ amneziawg_peers }}"
+      loop: "{{ vault_wg_peers }}"
       loop_control:
         label: "{{ item.name }}"
-      when: amneziawg_peers is defined and amneziawg_peers | length > 0
       no_log: true
       tags: [fetch-configs, never]
 

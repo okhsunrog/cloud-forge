@@ -52,37 +52,6 @@
     state: directory
     mode: '0700'
 
-- name: Check if private key exists
-  stat:
-    path: "{{ amneziawg_private_key_path }}"
-  register: private_key_file
-
-- name: Generate private key if not exists
-  shell: awg genkey > {{ amneziawg_private_key_path }}
-  args:
-    creates: "{{ amneziawg_private_key_path }}"
-  when: not private_key_file.stat.exists
-
-- name: Set proper permissions on private key
-  file:
-    path: "{{ amneziawg_private_key_path }}"
-    mode: '0600'
-
-- name: Read private key
-  slurp:
-    src: "{{ amneziawg_private_key_path }}"
-  register: amneziawg_private_key
-
-- name: Generate public key
-  shell: echo "{{ amneziawg_private_key.content | b64decode | trim }}" | awg pubkey > {{ amneziawg_public_key_path }}
-  args:
-    creates: "{{ amneziawg_public_key_path }}"
-
-- name: Read public key
-  slurp:
-    src: "{{ amneziawg_public_key_path }}"
-  register: amneziawg_public_key
-
 - name: Create client configs directory
   file:
     path: "{{ amneziawg_clients_dir }}"
@@ -102,10 +71,10 @@
     src: client.conf.j2
     dest: "{{ amneziawg_clients_dir }}/{{ item.name }}.conf"
     mode: '0600'
-  loop: "{{ amneziawg_peers }}"
-  notify: restart amneziawg
+  loop: "{{ vault_wg_peers }}"
+  loop_control:
+    label: "{{ item.name }}"
   no_log: true
-  when: amneziawg_peers is defined
 
 - name: Enable and start AmneziaWG
   systemd:

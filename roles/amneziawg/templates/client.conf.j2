@@ -1,14 +1,8 @@
 [Interface]
-PrivateKey = {{ item.private_key }}
-Address = {{ item.ip }}/32
+PrivateKey = {{ item.private }}
+Address = {{ item.ip | regex_replace('^10\.66\.66\.', '10.65.65.') }}/32
 DNS = 94.140.14.14, 94.140.15.15
 MTU = 1420
-
-[Peer]
-PublicKey = {{ amneziawg_public_key.content | b64decode | trim }}
-Endpoint = {{ amneziawg_endpoint_domain | default(ansible_facts['default_ipv4']['address']) }}:{{ amneziawg_port }}
-AllowedIPs = 0.0.0.0/0
-PersistentKeepalive = 25
 
 # AmneziaWG obfuscation parameters for DPI bypass
 Jc = {{ amneziawg_obfuscation.jc }}
@@ -20,3 +14,9 @@ H1 = {{ amneziawg_obfuscation.h1 }}
 H2 = {{ amneziawg_obfuscation.h2 }}
 H3 = {{ amneziawg_obfuscation.h3 }}
 H4 = {{ amneziawg_obfuscation.h4 }}
+
+[Peer]
+PublicKey = {{ vault_wg_moscow_clients_public }}
+Endpoint = {{ amneziawg_endpoint_domain | default(ansible_facts['default_ipv4']['address']) }}:{{ amneziawg_port }}
+AllowedIPs = 0.0.0.0/0
+PersistentKeepalive = 25

@@ -4,6 +4,7 @@
 # ===================
 
 # Moscow wg0 (clients server - serves NAS + devices)
+# Also used for AmneziaWG (awg0)
 vault_wg_moscow_clients_private: "server_private_key"
 vault_wg_moscow_clients_public: "server_public_key"
 
@@ -19,7 +20,8 @@ vault_wg_europe_upstream_public: "europe_upstream_public_key"
 # WireGuard Peers
 # ===================
 
-# Clients that connect to Moscow wg0
+# Clients that connect to Moscow wg0 and awg0
+# WireGuard uses 10.66.66.X, AmneziaWG uses 10.65.65.X (same last octet)
 vault_wg_peers:
   - name: "mira"
     private: "peer_private_key"
@@ -29,17 +31,6 @@ vault_wg_peers:
     private: "peer_private_key"
     public: "peer_public_key"
     ip: "10.66.66.5"
-
-# ===================
-# AmneziaWG Peers
-# ===================
-
-# Clients that connect to Moscow awg0 (DPI bypass VPN)
-vault_amneziawg_peers:
-  - name: "phone"
-    private: "peer_private_key"
-    public: "peer_public_key"
-    ip: "10.65.65.2"
 
 # ===================
 # OpenConnect Users
