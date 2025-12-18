@@ -8,6 +8,7 @@ nat_out_interface: "ens3"
 # VPN subnets for NAT masquerading (traffic goes through Europe tunnel)
 vpn_subnets:
   wireguard: "{{ wg_networks.clients }}"
+  amneziawg: "{{ wg_networks.amneziawg }}"
   ocserv_personal: "{{ wg_networks.ocserv_personal }}"
   ocserv_friends: "{{ wg_networks.ocserv_friends }}"
 
@@ -30,6 +31,9 @@ ports:
       type: tcp
     wireguard:
       port: 58889
+      type: udp
+    amneziawg:
+      port: 58888
       type: udp
     ocserv_personal:
       port: 443
@@ -130,3 +134,7 @@ ocserv_instances:
 
 # Coturn configuration
 coturn_domain: "{{ domains.coturn }}"
+
+# AmneziaWG configuration (DPI bypass VPN)
+amneziawg_endpoint_domain: "msk.okhsunrog.ru"
+amneziawg_peers: "{{ vault_amneziawg_peers | default([]) }}"

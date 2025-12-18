@@ -7,6 +7,7 @@ email: "me@okhsunrog.dev"  # for certbot
 wg_networks:
   upstream: "10.77.77.0/24"      # Moscow-Europe tunnel
   clients: "10.66.66.0/24"       # WireGuard clients (includes home server at .2)
+  amneziawg: "10.65.65.0/24"     # AmneziaWG clients (DPI bypass)
   ocserv_personal: "10.67.76.0/24"
   ocserv_friends: "10.68.68.0/24"
 

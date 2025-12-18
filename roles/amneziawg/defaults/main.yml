@@ -1,0 +1,20 @@
+---
+amneziawg_interface: "awg0"
+amneziawg_address: "10.65.65.1/24"
+amneziawg_port: 58888
+amneziawg_private_key_path: "/etc/amnezia/amneziawg/private.key"
+amneziawg_public_key_path: "/etc/amnezia/amneziawg/public.key"
+amneziawg_config_path: "/etc/amnezia/amneziawg"
+amneziawg_clients_dir: "/etc/amnezia/amneziawg/clients"
+
+# AmneziaWG obfuscation parameters for DPI bypass
+amneziawg_obfuscation:
+  jc: 30
+  jmin: 60
+  jmax: 120
+  s1: 55
+  s2: 155
+  h1: 1953034736
+  h2: 752945292
+  h3: 3945748733
+  h4: 1666444888

@@ -22,6 +22,8 @@
       tags: [base, system]
     - role: wireguard
       tags: [wireguard, vpn]
+    - role: amneziawg
+      tags: [amneziawg, vpn]
     - role: certbot
       tags: [certbot, certificates]
     - role: haproxy
@@ -49,6 +51,18 @@
       loop_control:
         label: "{{ item.name }}"
       when: item.private is defined or item.private_key is defined
+      no_log: true
+      tags: [fetch-configs, never]
+
+    - name: Fetch all AmneziaWG client configs
+      fetch:
+        src: "/etc/amnezia/amneziawg/clients/{{ item.name }}.conf"
+        dest: "{{ playbook_dir }}/generated_configs/amneziawg-clients/{{ item.name }}.conf"
+        flat: yes
+      loop: "{{ amneziawg_peers }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: amneziawg_peers is defined and amneziawg_peers | length > 0
       no_log: true
       tags: [fetch-configs, never]
 

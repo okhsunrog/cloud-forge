@@ -31,6 +31,17 @@ vault_wg_peers:
     ip: "10.66.66.5"
 
 # ===================
+# AmneziaWG Peers
+# ===================
+
+# Clients that connect to Moscow awg0 (DPI bypass VPN)
+vault_amneziawg_peers:
+  - name: "phone"
+    private: "peer_private_key"
+    public: "peer_public_key"
+    ip: "10.65.65.2"
+
+# ===================
 # OpenConnect Users
 # ===================
 

@@ -5,6 +5,7 @@
 # VPN subnets for NAT (traffic from Moscow clients)
 vpn_subnets:
   wireguard_clients: "{{ wg_networks.clients }}"
+  amneziawg: "{{ wg_networks.amneziawg }}"
   ocserv_personal: "{{ wg_networks.ocserv_personal }}"
   ocserv_friends: "{{ wg_networks.ocserv_friends }}"
   upstream: "{{ wg_networks.upstream }}"
@@ -43,7 +44,7 @@ wireguard_interfaces:
       - name: "moscow"
         public_key: "{{ vault_wg_moscow_upstream_public }}"
         ip: "10.77.77.2"
-        allowed_ips: "10.77.77.2/32,{{ wg_networks.clients }},{{ wg_networks.ocserv_personal }},{{ wg_networks.ocserv_friends }}"
+        allowed_ips: "10.77.77.2/32,{{ wg_networks.clients }},{{ wg_networks.amneziawg }},{{ wg_networks.ocserv_personal }},{{ wg_networks.ocserv_friends }}"
 
 # Domains for Europe VPS (blog on both TLDs)
 domains:
