@@ -1,6 +1,6 @@
 ---
-# Europe VPS Configuration (okhsunrog.dev)
-# VPN exit node, blog hosting only
+# Europe VPS Configuration (eu.okhsunrog.dev)
+# VPN exit node only (blog moved to Moscow)
 
 # VPN subnets for NAT (traffic from Moscow clients)
 vpn_subnets:
@@ -46,16 +46,10 @@ wireguard_interfaces:
         ip: "10.77.77.2"
         allowed_ips: "10.77.77.2/32,{{ wg_networks.clients }},{{ wg_networks.amneziawg }},{{ wg_networks.ocserv_personal }},{{ wg_networks.ocserv_friends }}"
 
-# Domains for Europe VPS (blog on both TLDs)
-domains:
-  nginx:
-    blog:
-      - "okhsunrog.dev"
-      - "okhsunrog.ru"
-
-# No reverse proxy needed (blog is local)
-# No ocserv instances (moved to Moscow)
+# No domains on Europe (blog moved to Moscow)
+# No reverse proxy needed
+# No ocserv instances (on Moscow)
 # No coturn (on Moscow)
 
-# Blog deployment
-blog_deploy_enabled: true
+# Blog deployment disabled (moved to Moscow)
+blog_deploy_enabled: false

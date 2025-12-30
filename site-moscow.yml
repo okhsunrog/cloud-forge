@@ -30,6 +30,8 @@
       tags: [haproxy, proxy]
     - role: nginx
       tags: [nginx, proxy]
+    - role: blog_deploy
+      tags: [blog, deploy]
     - role: ocserv
       tags: [ocserv, vpn]
     - role: coturn

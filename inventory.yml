@@ -11,5 +11,5 @@ all:
     europe:
       hosts:
         europe:
-          ansible_host: "okhsunrog.dev"
+          ansible_host: "eu.okhsunrog.dev"
           ansible_user: root

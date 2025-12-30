@@ -6,18 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an Ansible-based infrastructure automation project for deploying and managing a dual-VPS architecture:
 
-**Moscow VPS (okhsunrog.ru)**:
-- Entry point for services
+**Moscow VPS (msk.okhsunrog.ru)**:
+- Entry point for all services
 - WireGuard server for clients (wg0) + upstream client to Europe (wg1)
 - OpenConnect VPN with multiple instances (personal, friends)
 - Reverse proxy to home server via WireGuard
 - Coturn TURN/STUN server
+- Blog hosting
 - All client traffic routes through Europe tunnel
 
-**Europe VPS (okhsunrog.dev)**:
-- VPN exit node (NAT for Moscow traffic)
+**Europe VPS (eu.okhsunrog.dev)**:
+- VPN exit node only (NAT for Moscow traffic)
 - WireGuard upstream server
-- Blog hosting only
 
 ## Key Commands
 
@@ -27,8 +27,10 @@ This is an Ansible-based infrastructure automation project for deploying and man
 
 ### Selective Deployment with Tags
 - `ansible-playbook site-moscow.yml --tags wireguard` - Update WireGuard config
+- `ansible-playbook site-moscow.yml --tags amneziawg` - Update AmneziaWG config
 - `ansible-playbook site-moscow.yml --tags ocserv` - Update OpenConnect users
-- `ansible-playbook site-europe.yml --tags blog` - Update blog
+- `ansible-playbook site-moscow.yml --tags fetch-configs` - Pull client configs to local
+- `ansible-playbook site-moscow.yml --tags blog` - Update blog
 
 ### Configuration Management
 - Encrypted variables stored in `group_vars/all/vault.yml` using Ansible Vault
@@ -39,9 +41,9 @@ This is an Ansible-based infrastructure automation project for deploying and man
 ## Project Structure
 
 ### Core Files
-- `site-moscow.yml` - Moscow VPS playbook (services, VPN, reverse proxy)
-- `site-europe.yml` - Europe VPS playbook (blog, VPN exit)
-- `inventory.yml` - Defines target hosts (moscow, europe groups)
+- `site-moscow.yml` - Moscow VPS playbook (services, VPN, reverse proxy, blog)
+- `site-europe.yml` - Europe VPS playbook (VPN exit node only)
+- `inventory.yml` - Defines target hosts (msk.okhsunrog.ru, eu.okhsunrog.dev)
 - `ansible.cfg` - Ansible configuration with vault settings
 
 ### Roles Architecture
@@ -49,12 +51,13 @@ The project uses a modular role-based structure in `roles/`:
 
 - `base_system` - Base system configuration and hardening
 - `wireguard` - WireGuard VPN (supports multiple interfaces per host)
+- `amneziawg` - AmneziaWG VPN for DPI bypass (Moscow only, reuses WireGuard keys)
 - `ocserv` - OpenConnect VPN server with multi-instance support (Moscow only)
 - `certbot` - Let's Encrypt certificate management
 - `certbot_renewal_config` - Certificate auto-renewal configuration
 - `haproxy` - Load balancer configuration
 - `nginx` - Reverse proxy with SSL termination
-- `blog_deploy` - Blog deployment (Europe only)
+- `blog_deploy` - Blog deployment (Moscow only)
 - `coturn` - TURN/STUN server (Moscow only)
 - `network` - iptables, NAT, and tunnel routing
 - `fail2ban` - Intrusion prevention system
@@ -75,16 +78,26 @@ The project uses a modular role-based structure in `roles/`:
 **Europe-specific (`group_vars/europe/vars.yml`)**:
 - `wireguard_interfaces` - wg-upstream (server)
 - `vpn_subnets` - NAT configuration for Moscow traffic
-- `blog_deploy_enabled: true`
 
 ### Network Topology
 
 ```
-10.66.66.0/24 - WireGuard clients (Moscow: .1, home: .2, devices: .10+)
+10.65.65.0/24 - AmneziaWG clients (Moscow: .1, same peers as WireGuard)
+10.66.66.0/24 - WireGuard clients (Moscow: .1, home: .2, devices: .3+)
 10.77.77.0/24 - Moscow-Europe tunnel (.1 Europe, .2 Moscow)
 10.67.76.0/24 - ocserv personal (Moscow)
 10.68.68.0/24 - ocserv friends (Moscow)
 ```
+
+## DNS and Domains
+
+Stable subdomains for infrastructure (always point to same server):
+- `msk.okhsunrog.ru` → Moscow VPS IP
+- `eu.okhsunrog.dev` → Europe VPS IP
+
+User-facing domains (can be changed):
+- `okhsunrog.ru`, `okhsunrog.dev` → Currently point to Moscow (blog)
+- `*.okhsunrog.ru`, `*.okhsunrog.dev` → Service subdomains on Moscow
 
 ## Development Notes
 
@@ -93,4 +106,4 @@ The project uses a modular role-based structure in `roles/`:
 - Network role includes policy routing for Moscow (routes VPN traffic through Europe tunnel)
 - The playbook requires Ubuntu 22.04+ and includes OS version validation
 - SSL certificates are automatically managed via Let's Encrypt
-- Generated home server config is saved to `generated_configs/home-server/`
+- Generated client configs saved to `generated_configs/wireguard-clients/` and `generated_configs/amneziawg-clients/`

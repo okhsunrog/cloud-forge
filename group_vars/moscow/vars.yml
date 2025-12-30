@@ -72,7 +72,7 @@ wireguard_interfaces:
     role: "client"
     address: "10.77.77.2/24"
     private_key: "{{ vault_wg_moscow_upstream_private }}"
-    endpoint: "okhsunrog.dev:58886"
+    endpoint: "eu.okhsunrog.dev:58886"
     peer_public_key: "{{ vault_wg_europe_upstream_public }}"
     # Allow all traffic through tunnel, policy routing decides what goes here
     allowed_ips: "0.0.0.0/0"
@@ -96,6 +96,9 @@ domains:
   ocserv_friends: "kafe.okhsunrog.ru"
   coturn: "turn.okhsunrog.ru"
   nginx:
+    blog:
+      - "okhsunrog.dev"
+      - "okhsunrog.ru"
     jellyfin:
       - "jellyfin.okhsunrog.ru"
       - "jellyfin.okhsunrog.dev"
@@ -138,3 +141,6 @@ coturn_domain: "{{ domains.coturn }}"
 # AmneziaWG configuration (DPI bypass VPN)
 # Uses same keys as WireGuard (vault_wg_peers), IPs auto-mapped to 10.65.65.X
 amneziawg_endpoint_domain: "msk.okhsunrog.ru"
+
+# Blog deployment
+blog_deploy_enabled: true
