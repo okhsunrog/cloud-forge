@@ -26,6 +26,7 @@ This is an Ansible-based infrastructure automation project for deploying and man
 - `ansible-playbook site-moscow.yml` - Deploy Moscow VPS (deploy after Europe)
 
 ### Selective Deployment with Tags
+- `ansible-playbook site-moscow.yml --tags wireguard,amneziawg && ansible-playbook site-moscow.yml --tags fetch-configs` - Update WireGuard + AmneziaWG and fetch client configs (common pattern)
 - `ansible-playbook site-moscow.yml --tags wireguard` - Update WireGuard config
 - `ansible-playbook site-moscow.yml --tags amneziawg` - Update AmneziaWG config
 - `ansible-playbook site-moscow.yml --tags ocserv` - Update OpenConnect users
