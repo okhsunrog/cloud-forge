@@ -1,8 +1,10 @@
 [Unit]
 Description=Setup policy routing for VPN tunnel
-After=network-online.target wg-quick@{{ tunnel_interface }}.service
+After=network-online.target wg-quick@{{ tunnel_interface }}.service wg-quick@wg0.service wg-quick@awg0.service
 Requires=wg-quick@{{ tunnel_interface }}.service
-Wants=network-online.target
+Wants=network-online.target wg-quick@wg0.service wg-quick@awg0.service
+# Restart this service when any WireGuard interface restarts (routes are lost on interface restart)
+PartOf=wg-quick@{{ tunnel_interface }}.service wg-quick@wg0.service wg-quick@awg0.service
 
 [Service]
 Type=oneshot
