@@ -22,15 +22,18 @@ vault_wg_europe_upstream_public: "europe_upstream_public_key"
 
 # Clients that connect to Moscow wg0 and awg0
 # WireGuard uses 10.66.66.X, AmneziaWG uses 10.65.65.X (same last octet)
+# trusted: true = your devices (full access), false = friends (internet only, isolated)
 vault_wg_peers:
   - name: "mira"
     private: "peer_private_key"
     public: "peer_public_key"
     ip: "10.66.66.2"
-  - name: "husky"
+    trusted: true
+  - name: "friend_device"
     private: "peer_private_key"
     public: "peer_public_key"
     ip: "10.66.66.5"
+    trusted: false
 
 # ===================
 # OpenConnect Users

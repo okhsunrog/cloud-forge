@@ -49,6 +49,20 @@
   when: wg_networks.ocserv_friends is defined and ocserv_instances is defined
   notify: save iptables
 
+# Block untrusted WireGuard peers from reaching any VPN subnet
+# Untrusted peers can only access the internet (via Europe tunnel)
+- name: Block untrusted WireGuard peers from reaching VPN subnets
+  iptables:
+    chain: FORWARD
+    source: "{{ item[0].ip }}/32"
+    destination: "{{ item[1] }}"
+    jump: DROP
+  loop: "{{ vault_wg_peers | selectattr('trusted', 'defined') | selectattr('trusted', 'equalto', false) | product([wg_networks.clients, wg_networks.amneziawg, wg_networks.upstream, wg_networks.ocserv_personal, wg_networks.ocserv_friends]) | list }}"
+  when:
+    - vault_wg_peers is defined
+    - wireguard_interfaces is defined
+  notify: save iptables
+
 # Policy routing for tunnel (Moscow VPS)
 - name: Create routing table for tunnel
   lineinfile:
