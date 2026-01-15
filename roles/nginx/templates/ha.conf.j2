@@ -1,0 +1,50 @@
+{# roles/nginx/templates/ha.conf.j2 #}
+{% set ha_ip = reverse_proxy.nas_ip | default('10.66.66.2') %}
+{% set ha_port = reverse_proxy.ports.homeassistant | default(8123) %}
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+{% for domain in domains.nginx.ha %}
+server {
+    listen {{ ports.internal.nginx_https }} ssl http2 proxy_protocol;
+    server_name {{ domain }};
+
+    set_real_ip_from 127.0.0.1;
+    real_ip_header proxy_protocol;
+
+    # SSL configuration
+    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://{{ ha_ip }}:{{ ha_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $proxy_protocol_addr;
+        proxy_set_header X-Forwarded-For $proxy_protocol_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support (required for Home Assistant)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+
+        proxy_buffering off;
+    }
+}
+{% endfor %}
+
+# HTTP redirect server block
+server {
+    listen 80 proxy_protocol;
+    server_name {% for domain in domains.nginx.ha %}{{ domain }} {% endfor %};
+
+    set_real_ip_from 127.0.0.1;
+    real_ip_header proxy_protocol;
+
+    return 301 https://$host$request_uri;
+}

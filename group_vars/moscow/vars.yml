@@ -87,6 +87,7 @@ reverse_proxy:
     nextcloud: 2345
     photoprism: 2342
     forgejo: 3000
+    homeassistant: 8123
 
 # Domains for Moscow VPS (services proxied to home)
 # User-facing services get both .ru and .dev
@@ -111,6 +112,8 @@ domains:
     git:
       - "fgj.okhsunrog.ru"
       - "fgj.okhsunrog.dev"
+    ha:
+      - "ha.okhsunrog.ru"
 
 # OpenConnect instances (both on Moscow)
 ocserv_instances:
