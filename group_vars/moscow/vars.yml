@@ -88,6 +88,7 @@ reverse_proxy:
     photoprism: 2342
     forgejo: 3000
     homeassistant: 8123
+    fridge: 3030
 
 # Domains for Moscow VPS (services proxied to home)
 # User-facing services get both .ru and .dev
@@ -114,6 +115,8 @@ domains:
       - "fgj.okhsunrog.dev"
     ha:
       - "ha.okhsunrog.ru"
+    fridge:
+      - "fridge.okhsunrog.ru"
 
 # OpenConnect instances (both on Moscow)
 ocserv_instances:
