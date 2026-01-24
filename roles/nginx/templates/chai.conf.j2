@@ -16,6 +16,18 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    # Static files - short cache with revalidation
+    location /pkg/ {
+        proxy_pass http://{{ chai_ip }}:{{ chai_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $proxy_protocol_addr;
+        proxy_set_header X-Forwarded-For $proxy_protocol_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Force revalidation on each request
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
     location / {
         proxy_pass http://{{ chai_ip }}:{{ chai_port }};
         proxy_set_header Host $host;
