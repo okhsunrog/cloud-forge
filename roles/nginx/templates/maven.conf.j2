@@ -1,0 +1,71 @@
+{# roles/nginx/templates/maven.conf.j2 #}
+{# Maven repository - static file server for Kotlin/Native Compose artifacts #}
+{% for domain in domains.nginx.maven %}
+server {
+    listen {{ ports.internal.nginx_https }} ssl http2 proxy_protocol;
+    server_name {{ domain }};
+
+    # Get real IP from HAProxy
+    set_real_ip_from 127.0.0.1;
+    real_ip_header proxy_protocol;
+
+    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Security headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
+    # Basic settings
+    keepalive_timeout 70;
+    client_max_body_size 1M;
+    port_in_redirect off;
+    root /var/www/maven;
+
+    # Enable directory listing for Maven repo browsing
+    autoindex on;
+    autoindex_exact_size off;
+    autoindex_localtime on;
+
+    # Main location
+    location / {
+        # CORS headers for Gradle/Maven clients
+        add_header Access-Control-Allow-Origin "*" always;
+        add_header Access-Control-Allow-Methods "GET, HEAD, OPTIONS" always;
+
+        # Cache Maven artifacts aggressively (they're immutable)
+        location ~* \.(pom|jar|klib|module|sha1|sha256|sha512|md5)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+            add_header Access-Control-Allow-Origin "*" always;
+        }
+
+        # Metadata files can change (for SNAPSHOT resolution)
+        location ~* (maven-metadata\.xml|maven-metadata-local\.xml)$ {
+            expires 5m;
+            add_header Cache-Control "public, must-revalidate";
+            add_header Access-Control-Allow-Origin "*" always;
+        }
+    }
+
+    # Protect hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+}
+{% endfor %}
+
+# HTTP redirect server block
+server {
+    listen 80 proxy_protocol;
+    server_name {% for domain in domains.nginx.maven %}{{ domain }} {% endfor %};
+
+    set_real_ip_from 127.0.0.1;
+    real_ip_header proxy_protocol;
+
+    return 301 https://$host$request_uri;
+}
