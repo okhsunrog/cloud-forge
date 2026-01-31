@@ -90,6 +90,7 @@ reverse_proxy:
     homeassistant: 8123
     fridge: 3030
     chai: 3031
+    bigfive: 3032
 
 # Domains for Moscow VPS (services proxied to home)
 # User-facing services get both .ru and .dev
@@ -120,6 +121,8 @@ domains:
       - "fridge.okhsunrog.ru"
     chai:
       - "chai.okhsunrog.ru"
+    bigfive:
+      - "bigfive.okhsunrog.ru"
     maven:
       - "maven.okhsunrog.dev"
 
