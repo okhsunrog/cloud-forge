@@ -26,12 +26,15 @@ This is an Ansible-based infrastructure automation project for deploying and man
 - `ansible-playbook site-moscow.yml` - Deploy Moscow VPS (deploy after Europe)
 
 ### Selective Deployment with Tags
-- `ansible-playbook site-moscow.yml --tags wireguard,amneziawg && ansible-playbook site-moscow.yml --tags fetch-configs` - Update WireGuard + AmneziaWG and fetch client configs (common pattern)
-- `ansible-playbook site-moscow.yml --tags wireguard` - Update WireGuard config
+- `ansible-playbook site-moscow.yml --tags wireguard,amneziawg,network && ansible-playbook site-moscow.yml --tags fetch-configs` - Add/update WireGuard peers (includes network to apply firewall rules for untrusted peers)
+- `ansible-playbook site-moscow.yml --tags wireguard` - Update WireGuard config only (no firewall changes)
 - `ansible-playbook site-moscow.yml --tags amneziawg` - Update AmneziaWG config
+- `ansible-playbook site-moscow.yml --tags network` - Update firewall rules, NAT, and tunnel routing
 - `ansible-playbook site-moscow.yml --tags ocserv` - Update OpenConnect users
 - `ansible-playbook site-moscow.yml --tags fetch-configs` - Pull client configs to local
 - `ansible-playbook site-moscow.yml --tags blog` - Update blog
+
+**Important**: When adding untrusted WireGuard peers, always include the `network` tag to apply iptables rules that block them from accessing internal VPN subnets.
 
 ### Configuration Management
 - Encrypted variables stored in `group_vars/all/vault.yml` using Ansible Vault
