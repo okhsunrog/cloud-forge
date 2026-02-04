@@ -58,6 +58,8 @@
     destination: "{{ item[1] }}"
     jump: DROP
   loop: "{{ vault_wg_peers | selectattr('trusted', 'defined') | selectattr('trusted', 'equalto', false) | product([wg_networks.clients, wg_networks.amneziawg, wg_networks.upstream, wg_networks.ocserv_personal, wg_networks.ocserv_friends]) | list }}"
+  loop_control:
+    label: "{{ item[0].name }} -> {{ item[1] }}"
   when:
     - vault_wg_peers is defined
     - wireguard_interfaces is defined
@@ -156,6 +158,8 @@
     jump: ACCEPT
     in_interface: "{{ item.interface }}"
   loop: "{{ wireguard_interfaces | default([]) }}"
+  loop_control:
+    label: "{{ item.name }}"
   when: wireguard_interfaces is defined
   notify: save iptables
 

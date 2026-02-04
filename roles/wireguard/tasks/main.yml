@@ -16,4 +16,5 @@
   loop: "{{ wireguard_interfaces }}"
   loop_control:
     loop_var: wg_iface
+    label: "{{ wg_iface.name }}"
   when: wireguard_interfaces is defined
