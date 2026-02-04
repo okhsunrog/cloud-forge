@@ -86,6 +86,13 @@
     daemon_reload: yes
   when: route_through_tunnel | default(false)
 
+- name: Deploy networkd-dispatcher hook for tunnel routing
+  template:
+    src: tunnel-routing-dispatcher.j2
+    dest: /etc/networkd-dispatcher/routable.d/50-tunnel-routing
+    mode: '0755'
+  when: route_through_tunnel | default(false)
+
 # Standard firewall rules
 - name: Allow established connections
   iptables:

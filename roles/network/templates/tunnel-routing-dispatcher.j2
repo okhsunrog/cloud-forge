@@ -1,0 +1,34 @@
+#!/bin/bash
+# Ensure tunnel routing rules are in place
+# Triggered by networkd-dispatcher on network state changes
+
+# Only run for routable state
+[ "$STATE" = "routable" ] || exit 0
+
+# Check if tunnel table exists
+if ! grep -q "^100.*tunnel" /etc/iproute2/rt_tables; then
+    exit 0
+fi
+
+# Check if WireGuard tunnel interface is up
+if ! ip link show {{ tunnel_interface }} &>/dev/null; then
+    exit 0
+fi
+
+# Ensure routes exist in tunnel table (idempotent)
+ip route show table tunnel | grep -q "default via {{ tunnel_gateway }}" || \
+    ip route add default via {{ tunnel_gateway }} dev {{ tunnel_interface }} table tunnel 2>/dev/null
+
+ip route show table tunnel | grep -q "{{ wg_networks.clients }}" || \
+    ip route add {{ wg_networks.clients }} dev wg0 table tunnel 2>/dev/null
+
+ip route show table tunnel | grep -q "{{ wg_networks.amneziawg }}" || \
+    ip route add {{ wg_networks.amneziawg }} dev awg0 table tunnel 2>/dev/null
+
+# Ensure ip rules exist (idempotent)
+{% for subnet_name, subnet_cidr in vpn_subnets.items() %}
+ip rule show | grep -q "from {{ subnet_cidr }} lookup tunnel" || \
+    ip rule add from {{ subnet_cidr }} lookup tunnel priority 100 2>/dev/null
+{% endfor %}
+
+exit 0
